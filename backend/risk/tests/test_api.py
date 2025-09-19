@@ -1,15 +1,15 @@
 from django.contrib.auth import get_user_model
 from rest_framework import status
-from rest_framework.test import APITestCase
 from rest_framework.authtoken.models import Token
+from rest_framework.test import APITestCase
 
 from risk import models
 
 
 class RiskApiTests(APITestCase):
     def setUp(self):
-        User = get_user_model()
-        self.user = User.objects.create_user(username='tester', password='password123')
+        user_model = get_user_model()
+        self.user = user_model.objects.create_user(username='tester', password='password123')
         self.token, _ = Token.objects.get_or_create(user=self.user)
         self.client.credentials(HTTP_AUTHORIZATION=f'Token {self.token.key}')
 
@@ -19,9 +19,8 @@ class RiskApiTests(APITestCase):
         self.control = models.Control.objects.create(reference_id='CTRL-1', name='Access Control Policy')
         self.control.frameworks.add(self.framework)
 
-    def test_create_and_list_risks(self):
-        url = '/api/risks/'
-        payload = {
+    def _risk_payload(self):
+        return {
             'title': 'Unauthorized access in production',
             'description': 'Privilege escalation risk in production systems',
             'status': 'identified',
@@ -34,34 +33,84 @@ class RiskApiTests(APITestCase):
             'framework_ids': [self.framework.id],
         }
 
-        create_response = self.client.post(url, payload, format='json')
+    def test_authentication_required(self):
+        self.client.credentials()
+        response = self.client.get('/api/risks/')
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_create_list_update_delete_risk(self):
+        create_response = self.client.post('/api/risks/', self._risk_payload(), format='json')
         self.assertEqual(create_response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(create_response.data['title'], payload['title'])
+        risk_id = create_response.data['id']
         self.assertEqual(create_response.data['severity_label'], 'Critical')
 
-        list_response = self.client.get(url)
+        list_response = self.client.get('/api/risks/?status=identified')
         self.assertEqual(list_response.status_code, status.HTTP_200_OK)
         self.assertEqual(list_response.data['count'], 1)
-        self.assertEqual(list_response.data['results'][0]['title'], payload['title'])
 
-    def test_risk_summary_endpoint(self):
+        update_response = self.client.patch(f'/api/risks/{risk_id}/', {'status': 'mitigating'}, format='json')
+        self.assertEqual(update_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(update_response.data['status'], 'mitigating')
+
+        delete_response = self.client.delete(f'/api/risks/{risk_id}/')
+        self.assertEqual(delete_response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(models.Risk.objects.count(), 0)
+
+    def test_filter_by_framework(self):
+        self.client.post('/api/risks/', self._risk_payload(), format='json')
+        response = self.client.get('/api/risks/?framework=NIST-CSF')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['count'], 1)
+
+    def test_risk_summary_and_dashboard(self):
         risk = models.Risk.objects.create(
             title='Third-party outage',
             project=self.project,
+            owner='Ops',
             likelihood=3,
             impact=3,
         )
         risk.frameworks.add(self.framework)
 
-        response = self.client.get('/api/risks/summary/')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['total_risks'], 1)
-        self.assertIn('by_status', response.data)
-        self.assertIn('by_severity', response.data)
+        summary_response = self.client.get('/api/risks/summary/')
+        self.assertEqual(summary_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(summary_response.data['total_risks'], 1)
+        self.assertIn('by_status', summary_response.data)
+        self.assertIn('by_severity', summary_response.data)
 
-    def test_dashboard_counts(self):
-        models.Risk.objects.create(title='Data breach', project=self.project)
-        response = self.client.get('/api/dashboard/')
+        dashboard_response = self.client.get('/api/dashboard/')
+        self.assertEqual(dashboard_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(dashboard_response.data['projects'], 1)
+        self.assertEqual(dashboard_response.data['risks'], 1)
+        self.assertEqual(dashboard_response.data['frameworks'], 1)
+
+    def test_framework_list(self):
+        response = self.client.get('/api/frameworks/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['projects'], 1)
-        self.assertEqual(response.data['risks'], 1)
+        self.assertGreaterEqual(response.data['count'], 1)
+
+    def test_asset_filter_by_type(self):
+        response = self.client.get('/api/assets/?asset_type=application')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        payload = response.data
+        results = payload.get('results', payload)
+        self.assertGreaterEqual(len(results), 1)
+        self.assertTrue(all(item['asset_type'] == 'application' for item in results))
+
+    def test_seeded_fixtures_accessible(self):
+        models.Framework.objects.all().delete()
+        self.assertEqual(models.Framework.objects.count(), 0)
+        self.client.credentials()
+        # load fixture to confirm it can be applied without error
+        from django.core.management import call_command
+
+        call_command('loaddata', 'frameworks')
+        self.assertGreater(models.Framework.objects.count(), 0)
+
+    def test_user_suggestions_endpoint(self):
+        response = self.client.get('/api/users/suggestions/?q=test')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        payload = response.data
+        results = payload.get('results', payload)
+        usernames = [item.get('username') for item in results]
+        self.assertIn('tester', usernames)

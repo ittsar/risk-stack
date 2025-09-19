@@ -237,3 +237,62 @@ thead {
 tbody tr:nth-child(odd) {
     background-color: #f8fafc;
 }
+
+textarea {
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid #cbd5f5;
+    font-family: inherit;
+}
+
+.autocomplete-wrapper {
+    position: relative;
+}
+
+.autocomplete-panel {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: #ffffff;
+    border: 1px solid #cbd5f5;
+    border-radius: 8px;
+    box-shadow: 0 16px 32px rgba(15, 23, 42, 0.12);
+    max-height: 260px;
+    overflow-y: auto;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+}
+
+.autocomplete-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    text-align: left;
+}
+
+.autocomplete-item:hover {
+    background: #eef2ff;
+}
+
+.autocomplete-primary {
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.autocomplete-secondary {
+    font-size: 0.85rem;
+    color: #64748b;
+}
+
+.autocomplete-source {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    text-transform: uppercase;
+}

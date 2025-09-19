@@ -1,3 +1,4 @@
+from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
 from . import models
@@ -180,3 +181,24 @@ class RiskSerializer(serializers.ModelSerializer):
         self._set_many_to_many(risk, "controls", control_ids)
         self._set_many_to_many(risk, "frameworks", framework_ids)
         return risk
+
+
+class UserSummarySerializer(serializers.ModelSerializer):
+    display_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = get_user_model()
+        fields = [
+            "id",
+            "username",
+            "first_name",
+            "last_name",
+            "email",
+            "display_name",
+        ]
+
+    def get_display_name(self, obj):
+        full_name = obj.get_full_name().strip()
+        if full_name:
+            return f"{full_name} ({obj.username})"
+        return obj.username

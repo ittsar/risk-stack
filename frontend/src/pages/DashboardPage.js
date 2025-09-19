@@ -45,6 +45,13 @@ const DashboardPage = () => {
     ];
 
     const severityOrder = ['Critical', 'High', 'Medium', 'Low', 'Very Low'];
+    const severityColors = {
+        Critical: '#fee2e2',
+        High: '#fef3c7',
+        Medium: '#bfdbfe',
+        Low: '#ccfbf1',
+        'Very Low': '#e2e8f0',
+    };
 
     return (
         <div>
@@ -66,10 +73,15 @@ const DashboardPage = () => {
                 <div className="heatmap-grid">
                     {severityOrder.map((label) => {
                         const count = summary.by_severity[label] || 0;
+                        const background = severityColors[label] || '#e2e8f0';
                         return (
-                            <div className="heatmap-cell" key={label}>
+                            <div
+                                className="heatmap-cell"
+                                key={label}
+                                style={{ backgroundColor: background }}
+                            >
                                 <div style={{ fontSize: '0.8rem', color: '#64748b' }}>{label}</div>
-                                <div style={{ fontSize: '1.5rem' }}>{count}</div>
+                                <div style={{ fontSize: '1.5rem', color: '#0f172a' }}>{count}</div>
                             </div>
                         );
                     })}

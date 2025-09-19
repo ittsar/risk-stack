@@ -6,7 +6,7 @@ Risk Stack is a starter kit pairing Django REST with a React frontend so you can
 - Django 4 project configured with Django REST Framework, token authentication, and a healthcheck endpoint at `/api/health/`.
 - Rich risk domain models (projects, risks, assets, controls, findings, frameworks) with search, ordering, summaries, and OpenAPI docs.
 - Seed command for demo data plus fixtures for core frameworks (NIST, ISO, PCI, HIPAA).
-- React 17 app (Create React App) featuring dashboard widgets, risk register, asset/project inventories, and framework alignment views.
+- React 17 app (Create React App) featuring dashboard widgets, risk/project/asset CRUD, inventories, and framework alignment views.
 
 ## Project structure
 
@@ -27,8 +27,12 @@ risk-stack
 └── frontend
     ├── public/index.html
     ├── src/
-    │   ├── api/client.js
-    │   ├── components/Navigation.js
+│   ├── api/client.js
+│   ├── components/AssetForm.js
+│   ├── components/DirectoryAutocomplete.js
+│   ├── components/Navigation.js
+│   ├── components/ProjectForm.js
+│   ├── components/RiskForm.js
     │   ├── context/AuthContext.js
     │   ├── pages/
     │   │   ├── AssetsPage.js
@@ -44,6 +48,7 @@ risk-stack
 
 ## MVP features
 - REST endpoints for frameworks, controls, projects, assets, risks, and findings with filtering, ordering, and summary analytics.
+- Directory endpoint for user lookups to power owner assignment from existing Django users.
 - Token-based authentication with auto-provisioned tokens for new users and OpenAPI documentation at `/api/openapi/` + `/api/docs/`.
 - Dashboard metrics (projects, risks, findings, assets, controls, frameworks) and risk severity heatmap.
 - Framework alignment view to map risks across NIST CSF, ISO/IEC 27001, PCI DSS, and HIPAA.
@@ -93,7 +98,11 @@ Both wrappers activate the project virtualenv so you can run any `manage.py` com
 1. Build and start everything: `docker compose up --build`
 2. Access everything through Nginx at `http://localhost/` — requests to `/api` route to Django and the React dev server streams through the same origin. PostgreSQL remains available on port `5432` should you need direct access.
 3. Environment variables are declared in `docker-compose.yml`. Override them via a `.env` file at the project root or by exporting variables before running compose.
-4. Stop and remove containers: `docker compose down` (add `-v` to drop the PostgreSQL data volume).
+4. On startup the backend container automatically runs migrations and seeds common frameworks, demo data, and the default credentials:
+   - Username: `riskadmin`
+   - Password: `RiskStack123!`
+   Check the backend logs for the generated API token if you need to call the API directly.
+5. Stop and remove containers: `docker compose down` (add `-v` to drop the PostgreSQL data volume).
 
 The compose setup mounts the local `backend/` and `frontend/` directories for live reload, so code edits on the host refresh inside the running containers.
 
@@ -132,7 +141,7 @@ The React app reads `REACT_APP_API_BASE_URL` to know where to call the backend. 
 2. Run `python manage.py seed_demo_data` (or the docker equivalent) to create demo data and credentials.
 3. Start the React dev server (`npm start`) if you are not using Docker.
 4. Visit `http://localhost:3000` (dev servers) or `http://localhost/` (docker + nginx) and sign in with `riskadmin / RiskStack123!`.
-5. You should see the dashboard metrics, risk severity heatmap, risk register table, and framework alignment view populated with demo data.
+5. Expand the "New risk" panel to create a risk, or click "Edit" on a row to update/delete. The dashboard metrics, risk severity heatmap, risk register table, and framework alignment view will refresh with demo data.
 
 ## Testing
 - Backend: `cd backend && python manage.py test risk`

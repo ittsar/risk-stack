@@ -21,7 +21,10 @@ const resolveApiBaseUrl = () => {
 
 const API_BASE_URL = resolveApiBaseUrl();
 
-export const apiRequest = async (endpoint, { method = 'GET', token, body, params } = {}) => {
+export const apiRequest = async (
+    endpoint,
+    { method = 'GET', token, body, params, signal } = {}
+) => {
     const headers = {
         'Content-Type': 'application/json',
     };
@@ -45,6 +48,10 @@ export const apiRequest = async (endpoint, { method = 'GET', token, body, params
 
     if (body) {
         options.body = JSON.stringify(body);
+    }
+
+    if (signal) {
+        options.signal = signal;
     }
 
     const response = await fetch(url, options);

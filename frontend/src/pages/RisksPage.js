@@ -1,6 +1,7 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { apiRequest } from '../api/client';
 import { useAuth } from '../context/AuthContext';
+import RiskForm from '../components/RiskForm';
 
 const severityClassName = (label) => {
     if (!label) return 'severity-chip';
@@ -25,8 +26,12 @@ const RisksPage = () => {
     const [error, setError] = useState(null);
     const [search, setSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState('');
+    const [deleteError, setDeleteError] = useState(null);
+    const [editingRisk, setEditingRisk] = useState(null);
+    const [isCreateCollapsed, setIsCreateCollapsed] = useState(true);
+    const [isEditCollapsed, setIsEditCollapsed] = useState(true);
 
-    const fetchRisks = async (params = {}) => {
+    const fetchRisks = useCallback(async (params = {}) => {
         setLoading(true);
         setError(null);
         try {
@@ -37,13 +42,24 @@ const RisksPage = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [token]);
 
     useEffect(() => {
         if (token) {
             fetchRisks();
         }
-    }, [token]);
+    }, [token, fetchRisks]);
+
+    useEffect(() => {
+        if (!data) {
+            return;
+        }
+
+        const items = data.results ?? data;
+        if (Array.isArray(items) && items.length === 0 && isCreateCollapsed) {
+            setIsCreateCollapsed(false);
+        }
+    }, [data, isCreateCollapsed]);
 
     const onSearchSubmit = (event) => {
         event.preventDefault();
@@ -72,6 +88,29 @@ const RisksPage = () => {
         []
     );
 
+    const handleDelete = useCallback(
+        async (riskId) => {
+            const confirmed = window.confirm('Delete this risk? This action cannot be undone.');
+            if (!confirmed) return;
+
+            setDeleteError(null);
+            try {
+                await apiRequest(`/api/risks/${riskId}/`, { method: 'DELETE', token });
+                setEditingRisk((current) => {
+                    if (current?.id === riskId) {
+                        setIsEditCollapsed(true);
+                        return null;
+                    }
+                    return current;
+                });
+                fetchRisks({ search, status: statusFilter });
+            } catch (err) {
+                setDeleteError('Failed to delete risk.');
+            }
+        },
+        [token, fetchRisks, search, statusFilter]
+    );
+
     return (
         <div>
             <div className="page-header">
@@ -79,7 +118,27 @@ const RisksPage = () => {
                 <span style={{ color: '#64748b' }}>{total} total</span>
             </div>
 
-            <div className="card" style={{ marginBottom: '24px' }}>
+            {editingRisk && (
+                <RiskForm
+                    mode="edit"
+                    risk={editingRisk}
+                    onSuccess={() => fetchRisks({ search, status: statusFilter })}
+                    onCancel={() => {
+                        setEditingRisk(null);
+                        setIsEditCollapsed(true);
+                    }}
+                    isCollapsed={isEditCollapsed}
+                    setIsCollapsed={setIsEditCollapsed}
+                />
+            )}
+
+            <RiskForm
+                onSuccess={() => fetchRisks({ search, status: statusFilter })}
+                isCollapsed={isCreateCollapsed}
+                setIsCollapsed={setIsCreateCollapsed}
+            />
+
+            <div className="card" style={{ marginTop: '24px' }}>
                 <form className="table-actions" onSubmit={onSearchSubmit}>
                     <input
                         type="search"
@@ -99,7 +158,8 @@ const RisksPage = () => {
                     </button>
                 </form>
 
-                {error && <p style={{ color: '#dc2626' }}>Failed to load risks: {error}</p>}
+                {error && <p style={{ color: '#dc2626' }}>{error}</p>}
+                {deleteError && <p style={{ color: '#dc2626' }}>{deleteError}</p>}
 
                 <div style={{ overflowX: 'auto' }}>
                     <table>
@@ -112,6 +172,7 @@ const RisksPage = () => {
                                 <th>Likelihood</th>
                                 <th>Impact</th>
                                 <th>Frameworks</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -133,21 +194,47 @@ const RisksPage = () => {
                                             ? '—'
                                             : risk.frameworks.map((framework) => framework.code).join(', ')}
                                     </td>
+                                    <td>
+                                        <div style={{ display: 'flex', gap: '8px' }}>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setEditingRisk(risk);
+                                                    setIsEditCollapsed(false);
+                                                    setIsCreateCollapsed(true);
+                                                }}
+                                                style={{
+                                                    background: '#2563eb',
+                                                    color: '#fff',
+                                                    border: 'none',
+                                                    padding: '8px 12px',
+                                                    borderRadius: '6px',
+                                                    cursor: 'pointer',
+                                                }}
+                                            >
+                                                Edit
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => handleDelete(risk.id)}
+                                                style={{
+                                                    background: '#dc2626',
+                                                    color: '#fff',
+                                                    border: 'none',
+                                                    padding: '8px 12px',
+                                                    borderRadius: '6px',
+                                                    cursor: 'pointer',
+                                                }}
+                                            >
+                                                Delete
+                                            </button>
+                                        </div>
+                                    </td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
                 </div>
-            </div>
-            <div className="card">
-                <h2>Need to add a new risk?</h2>
-                <p>
-                    Use the API endpoint <code>POST /api/risks/</code> to create risks programmatically or extend this UI with a
-                    form. You can review the OpenAPI schema at{' '}
-                    <a href="/api/docs/" target="_blank" rel="noreferrer">
-                        API Docs
-                    </a>.
-                </p>
             </div>
         </div>
     );
