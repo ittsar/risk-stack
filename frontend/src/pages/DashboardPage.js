@@ -41,6 +41,7 @@ const DashboardPage = () => {
         { label: 'Open Findings', value: metrics.open_findings },
         { label: 'Assets', value: metrics.assets },
         { label: 'Controls', value: metrics.controls },
+        { label: 'Vulnerabilities', value: metrics.vulnerabilities },
         { label: 'Frameworks', value: metrics.frameworks },
     ];
 
@@ -112,3 +113,4 @@ const DashboardPage = () => {
 };
 
 export default DashboardPage;
+

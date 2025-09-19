@@ -131,6 +131,7 @@ const ControlsPage = () => {
                                 <th>Name</th>
                                 <th>Frameworks</th>
                                 <th>Mapped Framework Controls</th>
+                                <th>Vulnerabilities</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -138,6 +139,7 @@ const ControlsPage = () => {
                             {items.map((controlItem) => {
                                 const frameworks = controlItem.frameworks ?? [];
                                 const frameworkControls = controlItem.framework_controls ?? [];
+                                const vulnerabilities = controlItem.vulnerabilities ?? [];
                                 return (
                                     <tr key={controlItem.id}>
                                         <td style={{ fontWeight: 600 }}>{controlItem.reference_id}</td>
@@ -163,6 +165,24 @@ const ControlsPage = () => {
                                                     {frameworkControls.length > 3 ? (
                                                         <span style={{ color: '#475569', fontSize: '0.85rem' }}>
                                                             +{frameworkControls.length - 3} more
+                                                        </span>
+                                                    ) : null}
+                                                </div>
+                                            )}
+                                        </td>
+                                        <td>
+                                            {vulnerabilities.length === 0 ? (
+                                                '-'
+                                            ) : (
+                                                <div style={{ display: 'grid', gap: '4px' }}>
+                                                    {vulnerabilities.slice(0, 3).map((item) => (
+                                                        <span key={item.id} style={{ display: 'block' }}>
+                                                            {item.reference_id}
+                                                        </span>
+                                                    ))}
+                                                    {vulnerabilities.length > 3 ? (
+                                                        <span style={{ color: '#475569', fontSize: '0.85rem' }}>
+                                                            +{vulnerabilities.length - 3} more
                                                         </span>
                                                     ) : null}
                                                 </div>

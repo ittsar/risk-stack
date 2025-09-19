@@ -11,6 +11,7 @@ const Navigation = () => {
         { to: '/assets', label: 'Assets' },
         { to: '/controls', label: 'Controls' },
         { to: '/frameworks', label: 'Frameworks' },
+        { to: '/vulnerabilities', label: 'Vulnerabilities' },
     ];
 
     return (
@@ -45,3 +46,4 @@ const Navigation = () => {
 };
 
 export default Navigation;
+
