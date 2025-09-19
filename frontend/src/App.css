@@ -104,12 +104,39 @@ body {
     font-weight: 700;
 }
 
+
 .card {
     background: #fff;
     border-radius: 12px;
     padding: 24px;
     box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
 }
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+
+.card-header h2 {
+    margin: 0;
+    font-size: 1.15rem;
+}
+
+.card-toggle {
+    border: none;
+    background: transparent;
+    color: #2563eb;
+    cursor: pointer;
+    font-weight: 600;
+    padding: 0;
+}
+
+.card-toggle:hover {
+    color: #1d4ed8;
+}
+
 
 .table-actions {
     display: flex;
@@ -315,3 +342,4 @@ textarea {
     color: #94a3b8;
     text-transform: uppercase;
 }
+
