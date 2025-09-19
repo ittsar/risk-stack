@@ -226,3 +226,23 @@ class RiskApiTests(APITestCase):
         usernames = [item.get('username') for item in results]
         self.assertIn('tester', usernames)
 
+
+    def test_openapi_schema_endpoint(self):
+        response = self.client.get('/api/schema/', format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('openapi', response.data)
+
+    def test_swagger_ui_endpoint(self):
+        self.client.credentials()
+        response = self.client.get('/api/docs/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('SwaggerUIBundle', response.content.decode())
+
+    def test_redoc_endpoint(self):
+        self.client.credentials()
+        response = self.client.get('/api/docs/redoc/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        html = response.content.decode().lower()
+        self.assertIn('<redoc', html)
+
+
