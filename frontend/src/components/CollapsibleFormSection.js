@@ -1,5 +1,19 @@
 import React from 'react';
 
+const headerStyle = {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: '12px',
+};
+
+const buttonStyle = {
+    border: 'none',
+    background: 'transparent',
+    cursor: 'pointer',
+    color: '#2563eb',
+};
+
 const CollapsibleFormSection = ({
     title,
     collapsed = false,
@@ -15,10 +29,10 @@ const CollapsibleFormSection = ({
 
     return (
         <div className={rootClassName} style={style}>
-            <div className="card-header">
-                <h2>{title}</h2>
+            <div style={headerStyle}>
+                <h2 style={{ margin: 0 }}>{title}</h2>
                 {isCollapsible && (
-                    <button type="button" className="card-toggle" onClick={onToggle}>
+                    <button type="button" style={buttonStyle} onClick={onToggle}>
                         {effectiveLabel}
                     </button>
                 )}
