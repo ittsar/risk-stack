@@ -31,14 +31,14 @@ const AppLayout = () => {
             {token && <Navigation />}
             <main className="app-main">
                 <Switch>
-                    <Route path="/login" component={LoginPage} />
-                    <PrivateRoute path="/dashboard" component={DashboardPage} />
-                    <PrivateRoute path="/risks" component={RisksPage} />
-                    <PrivateRoute path="/projects" component={ProjectsPage} />
-                    <PrivateRoute path="/assets" component={AssetsPage} />
-                    <PrivateRoute path="/controls" component={ControlsPage} />
-                    <PrivateRoute path="/vulnerabilities" component={VulnerabilitiesPage} />
-                    <PrivateRoute path="/frameworks" component={FrameworksPage} />
+                    <Route exact path="/login" component={LoginPage} />
+                    <PrivateRoute exact path="/dashboard" component={DashboardPage} />
+                    <PrivateRoute exact path="/risks" component={RisksPage} />
+                    <PrivateRoute exact path="/projects" component={ProjectsPage} />
+                    <PrivateRoute exact path="/assets" component={AssetsPage} />
+                    <PrivateRoute exact path="/controls" component={ControlsPage} />
+                    <PrivateRoute exact path="/vulnerabilities" component={VulnerabilitiesPage} />
+                    <PrivateRoute exact path="/frameworks" component={FrameworksPage} />
                     <Redirect exact from="/" to="/dashboard" />
                     <Route render={() => <Redirect to="/dashboard" />} />
                 </Switch>
@@ -58,3 +58,4 @@ function App() {
 }
 
 export default App;
+

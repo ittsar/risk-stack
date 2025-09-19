@@ -181,11 +181,12 @@ SPECTACULAR_SETTINGS = {
     'SERVE_PERMISSIONS': ['rest_framework.permissions.AllowAny'],
 }
 
+APP_VERSION = os.getenv('APP_VERSION', '1.0.0')
+APP_BUILD_COMMIT = os.getenv('APP_BUILD_COMMIT', '')
+
 REST_CREATE_USER_TOKENS = True
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/stable/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-

@@ -42,6 +42,25 @@ body {
     transition: color 0.2s ease;
 }
 
+.nav-footer {
+    margin-top: auto;
+    display: grid;
+    gap: 8px;
+}
+
+.nav-version {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.nav-version-error {
+    color: #fca5a5;
+    font-size: 0.7rem;
+}
+
 .app-nav a.active,
 .app-nav a:hover {
     color: #38bdf8;

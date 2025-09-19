@@ -12,3 +12,16 @@ class HealthcheckViewTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json().get('status'), 'ok')
+
+
+class VersionViewTests(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+
+    def test_version_endpoint_returns_backend_version(self):
+        response = self.client.get(reverse('version'))
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertIn('backend', payload)
+        self.assertTrue(payload['backend'])
