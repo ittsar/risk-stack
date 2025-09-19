@@ -96,11 +96,11 @@ curl -L "<DOWNLOAD_URL>" -o backend/cprt_SP_800_53_5_2_0_09-19-2025.json   && do
 Or use the helper command (defaults can be overridden with `CPRT_*` env vars):
 
 ```bash
-./go.bash import-cprt <DOWNLOAD_URL>
+./go.bash import-cprt https://links.rmk.lol/stuff/cprt_SP_800_53_5_2_0_09-19-2025.json
 ```
 
 ```powershell
-go.bat import-cprt <DOWNLOAD_URL>
+go.bat import-cprt https://links.rmk.lol/stuff/cprt_SP_800_53_5_2_0_09-19-2025.json
 ```
 
 The file is saved under `backend/` so the importer can read it via the compose volume mount.
@@ -190,6 +190,7 @@ The React app reads `REACT_APP_API_BASE_URL` to know where to call the backend. 
 
 ## Contributing
 Pull requests and issue reports are welcome — feel free to open a discussion for larger changes before submitting a PR.
+
 
 
 
