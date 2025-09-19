@@ -111,10 +111,18 @@ const AssetForm = ({
 
     const collapsed = typeof isCollapsed === 'boolean' ? isCollapsed : false;
     const heading = mode === 'edit' && asset ? `Edit Asset - ${asset.name}` : mode === 'edit' ? 'Edit Asset' : 'Create New Asset';
+    const toggleLabel = collapsed
+        ? (mode === 'edit' ? 'Expand editor' : 'New asset')
+        : 'Collapse';
     const handleToggle = typeof isCollapsed === 'boolean' && setIsCollapsed ? () => setIsCollapsed((prev) => !prev) : undefined;
 
     return (
-        <CollapsibleFormSection title={heading} collapsed={collapsed} onToggle={handleToggle}>
+        <CollapsibleFormSection
+            title={heading}
+            collapsed={collapsed}
+            toggleLabel={toggleLabel}
+            onToggle={handleToggle}
+        >
             <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '16px', marginTop: '16px' }}>
                 <div style={{ display: 'grid', gap: '8px' }}>
                     <label htmlFor={`asset-name-${mode}`}>Name</label>

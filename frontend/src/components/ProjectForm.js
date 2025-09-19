@@ -95,10 +95,18 @@ const ProjectForm = ({
 
     const collapsed = typeof isCollapsed === 'boolean' ? isCollapsed : false;
     const heading = mode === 'edit' && project ? `Edit Project - ${project.name}` : mode === 'edit' ? 'Edit Project' : 'Create New Project';
+    const toggleLabel = collapsed
+        ? (mode === 'edit' ? 'Expand editor' : 'New project')
+        : 'Collapse';
     const handleToggle = typeof isCollapsed === 'boolean' && setIsCollapsed ? () => setIsCollapsed((prev) => !prev) : undefined;
 
     return (
-        <CollapsibleFormSection title={heading} collapsed={collapsed} onToggle={handleToggle}>
+        <CollapsibleFormSection
+            title={heading}
+            collapsed={collapsed}
+            toggleLabel={toggleLabel}
+            onToggle={handleToggle}
+        >
             <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '16px', marginTop: '16px' }}>
                 <div style={{ display: 'grid', gap: '8px' }}>
                     <label htmlFor={`project-name-${mode}`}>Name</label>

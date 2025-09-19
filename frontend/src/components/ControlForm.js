@@ -182,6 +182,9 @@ const ControlForm = ({
 
     const collapsed = typeof isCollapsed === 'boolean' ? isCollapsed : false;
     const heading = mode === 'edit' && control ? `Edit Control - ${control.reference_id}` : mode === 'edit' ? 'Edit Control' : 'Create Control';
+    const toggleLabel = collapsed
+        ? (mode === 'edit' ? 'Expand editor' : 'New control')
+        : 'Collapse';
     const handleToggle = typeof isCollapsed === 'boolean' && setIsCollapsed ? () => setIsCollapsed((prev) => !prev) : undefined;
 
     const frameworkOptionsWithLabel = frameworkOptions.map((item) => ({
@@ -212,6 +215,7 @@ const ControlForm = ({
         <CollapsibleFormSection
             title={heading}
             collapsed={collapsed}
+            toggleLabel={toggleLabel}
             onToggle={handleToggle}
             style={{ marginBottom: '24px' }}
         >
@@ -348,4 +352,3 @@ const ControlForm = ({
 };
 
 export default ControlForm;
-

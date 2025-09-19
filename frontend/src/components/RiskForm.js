@@ -123,10 +123,18 @@ const RiskForm = ({
 
     const collapsed = typeof isCollapsed === 'boolean' ? isCollapsed : false;
     const heading = mode === 'edit' && risk ? `Edit Risk - ${risk.title}` : mode === 'edit' ? 'Edit Risk' : 'Create New Risk';
+    const toggleLabel = collapsed
+        ? (mode === 'edit' ? 'Expand editor' : 'New risk')
+        : 'Collapse';
     const handleToggle = typeof isCollapsed === 'boolean' && setIsCollapsed ? () => setIsCollapsed((prev) => !prev) : undefined;
 
     return (
-        <CollapsibleFormSection title={heading} collapsed={collapsed} onToggle={handleToggle}>
+        <CollapsibleFormSection
+            title={heading}
+            collapsed={collapsed}
+            toggleLabel={toggleLabel}
+            onToggle={handleToggle}
+        >
             <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '16px', marginTop: '16px' }}>
                 <div style={{ display: 'grid', gap: '8px' }}>
                     <label htmlFor={`risk-title-${mode}`}>Title</label>
