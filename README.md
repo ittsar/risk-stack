@@ -1,6 +1,6 @@
-# Fullstack Application
+# Risk Stack
 
-Starter project for a Django REST backend and a React frontend that talk to each other out of the box.
+Risk Stack is a starter kit pairing Django REST with a React frontend so you can stand up a full-stack app quickly.
 
 ## What's inside
 - Django 4 project configured with Django REST Framework, CORS headers, and a healthcheck endpoint at `/api/health/`.
@@ -10,7 +10,7 @@ Starter project for a Django REST backend and a React frontend that talk to each
 ## Project structure
 
 ```
-.
+risk-stack
 ├── .gitignore
 ├── README.md
 ├── backend
@@ -83,7 +83,7 @@ The backend defaults to SQLite. If `DATABASE_URL` is set it will connect to Post
 3. Install dependencies: `npm install`
 4. Start the dev server: `npm start`
 
-The React app reads `REACT_APP_API_BASE_URL` to know where to call the backend. By default it targets `http://localhost:8000`.
+The React app reads `REACT_APP_API_BASE_URL` to know where to call the backend. If the variable is omitted, it automatically calls the same origin that served the bundle (useful when running behind the provided Nginx proxy).
 
 ## Verifying the stack
 1. Start the Django server on port 8000.

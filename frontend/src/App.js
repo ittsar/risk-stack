@@ -6,7 +6,7 @@ function App() {
     return (
         <Router>
             <div>
-                <h1>Welcome to the Fullstack App</h1>
+                <h1>Welcome to Risk Stack</h1>
                 <Switch>
                     <Route path="/" exact component={ExampleComponent} />
                     {/* Add more routes here as needed */}

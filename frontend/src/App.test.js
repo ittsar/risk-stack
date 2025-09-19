@@ -4,5 +4,5 @@ import App from './App';
 
 test('renders welcome heading', () => {
     render(<App />);
-    expect(screen.getByText(/welcome to the fullstack app/i)).toBeInTheDocument();
+    expect(screen.getByText(/welcome to risk stack/i)).toBeInTheDocument();
 });

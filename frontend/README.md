@@ -13,7 +13,7 @@ Only variables prefixed with `REACT_APP_` are exposed to the browser.
 
 | Variable | Purpose | Default |
 | --- | --- | --- |
-| `REACT_APP_API_BASE_URL` | Base URL for the Django backend | `http://localhost:8000` |
+| `REACT_APP_API_BASE_URL` | Base URL for the Django backend | *(empty → same origin)* |
 
 ## API integration
 `src/components/ExampleComponent.js` fetches `/api/health/` from the backend and renders the JSON payload so you can verify the round trip immediately after both servers start.
