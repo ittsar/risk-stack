@@ -6,25 +6,24 @@ const CollapsibleFormSection = ({
     toggleLabel,
     onToggle,
     children,
+    className = '',
+    style,
 }) => {
-    const showToggle = typeof collapsed === 'boolean' && typeof onToggle === 'function';
-    const effectiveLabel = toggleLabel || (collapsed ? 'Expand' : 'Collapse');
+    const isCollapsible = typeof onToggle === 'function';
+    const effectiveLabel = toggleLabel ?? (collapsed ? 'Expand form' : 'Collapse');
+    const rootClassName = ['card', className].filter(Boolean).join(' ');
 
     return (
-        <div className="card">
+        <div className={rootClassName} style={style}>
             <div className="card-header">
                 <h2>{title}</h2>
-                {showToggle && (
-                    <button
-                        type="button"
-                        className="card-toggle"
-                        onClick={onToggle}
-                    >
+                {isCollapsible && (
+                    <button type="button" className="card-toggle" onClick={onToggle}>
                         {effectiveLabel}
                     </button>
                 )}
             </div>
-            {(!showToggle || !collapsed) && children}
+            {!isCollapsible || !collapsed ? children : null}
         </div>
     );
 };

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { apiRequest } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import DirectoryAutocomplete from './DirectoryAutocomplete';
+import CollapsibleFormSection from './CollapsibleFormSection';
 
 const initialState = {
     title: '',
@@ -121,39 +122,16 @@ const RiskForm = ({
     };
 
     const collapsed = typeof isCollapsed === 'boolean' ? isCollapsed : false;
-    const heading = mode === 'edit' && risk ? `Edit Risk – ${risk.title}` : mode === 'edit' ? 'Edit Risk' : 'Create New Risk';
-    const toggleLabel = collapsed
-        ? mode === 'edit'
-            ? 'Expand editor'
-            : 'New risk'
-        : 'Collapse';
+    const heading = mode === 'edit' && risk ? `Edit Risk - ${risk.title}` : mode === 'edit' ? 'Edit Risk' : 'Create New Risk';
+    const handleToggle = typeof isCollapsed === 'boolean' && setIsCollapsed ? () => setIsCollapsed((prev) => !prev) : undefined;
 
     return (
-        <div className="card">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h2 style={{ margin: 0 }}>{heading}</h2>
-                {typeof isCollapsed === 'boolean' && setIsCollapsed ? (
-                    <button
-                        type="button"
-                        onClick={() => setIsCollapsed && setIsCollapsed((prev) => !prev)}
-                        style={{
-                            border: 'none',
-                            background: 'transparent',
-                            cursor: 'pointer',
-                            color: '#2563eb',
-                        }}
-                    >
-                        {toggleLabel}
-                    </button>
-                ) : null}
-            </div>
-
-            {!collapsed && (
-                <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '16px', marginTop: '16px' }}>
-                    <div style={{ display: 'grid', gap: '8px' }}>
-                    <label htmlFor="title">Title</label>
+        <CollapsibleFormSection title={heading} collapsed={collapsed} onToggle={handleToggle}>
+            <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '16px', marginTop: '16px' }}>
+                <div style={{ display: 'grid', gap: '8px' }}>
+                    <label htmlFor={`risk-title-${mode}`}>Title</label>
                     <input
-                        id="title"
+                        id={`risk-title-${mode}`}
                         name="title"
                         type="text"
                         value={formData.title}
@@ -162,10 +140,10 @@ const RiskForm = ({
                     />
                 </div>
 
-                    <div style={{ display: 'grid', gap: '8px' }}>
-                    <label htmlFor="description">Description</label>
+                <div style={{ display: 'grid', gap: '8px' }}>
+                    <label htmlFor={`risk-description-${mode}`}>Description</label>
                     <textarea
-                        id="description"
+                        id={`risk-description-${mode}`}
                         name="description"
                         rows={3}
                         value={formData.description}
@@ -173,7 +151,7 @@ const RiskForm = ({
                     />
                 </div>
 
-                    <div style={{ display: 'grid', gap: '8px', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
+                <div style={{ display: 'grid', gap: '8px', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
                     <DirectoryAutocomplete
                         id={`risk-owner-${mode}-${risk?.id ?? 'new'}`}
                         label="Owner"
@@ -182,17 +160,17 @@ const RiskForm = ({
                         placeholder="Owner name or username"
                     />
                     <div style={{ display: 'grid', gap: '8px' }}>
-                        <label htmlFor="project">Project</label>
+                        <label htmlFor={`risk-project-${mode}`}>Project</label>
                         <select
-                            id="project"
+                            id={`risk-project-${mode}`}
                             name="project"
                             value={formData.project}
                             onChange={handleInputChange}
                         >
                             <option value="">Unassigned</option>
-                            {projects.map((project) => (
-                                <option key={project.id} value={project.id}>
-                                    {project.name}
+                            {projects.map((projectItem) => (
+                                <option key={projectItem.id} value={projectItem.id}>
+                                    {projectItem.name}
                                 </option>
                             ))}
                         </select>
@@ -201,24 +179,24 @@ const RiskForm = ({
 
                 <div style={{ display: 'grid', gap: '8px', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
                     <div style={{ display: 'grid', gap: '8px' }}>
-                        <label htmlFor="status">Status</label>
+                        <label htmlFor={`risk-status-${mode}`}>Status</label>
                         <select
-                            id="status"
+                            id={`risk-status-${mode}`}
                             name="status"
                             value={formData.status}
                             onChange={handleInputChange}
                         >
-                            <option value="identified">Identified</option>
-                            <option value="analyzing">Analyzing</option>
-                            <option value="mitigating">Mitigating</option>
-                            <option value="accepted">Accepted</option>
-                            <option value="closed">Closed</option>
+                            {['identified', 'analyzing', 'mitigating', 'accepted', 'closed'].map((value) => (
+                                <option key={value} value={value}>
+                                    {value.charAt(0).toUpperCase() + value.slice(1)}
+                                </option>
+                            ))}
                         </select>
                     </div>
                     <div style={{ display: 'grid', gap: '8px' }}>
-                        <label htmlFor="likelihood">Likelihood</label>
+                        <label htmlFor={`risk-likelihood-${mode}`}>Likelihood</label>
                         <select
-                            id="likelihood"
+                            id={`risk-likelihood-${mode}`}
                             name="likelihood"
                             value={formData.likelihood}
                             onChange={handleInputChange}
@@ -231,9 +209,9 @@ const RiskForm = ({
                         </select>
                     </div>
                     <div style={{ display: 'grid', gap: '8px' }}>
-                        <label htmlFor="impact">Impact</label>
+                        <label htmlFor={`risk-impact-${mode}`}>Impact</label>
                         <select
-                            id="impact"
+                            id={`risk-impact-${mode}`}
                             name="impact"
                             value={formData.impact}
                             onChange={handleInputChange}
@@ -247,10 +225,10 @@ const RiskForm = ({
                     </div>
                 </div>
 
-                    <div style={{ display: 'grid', gap: '8px' }}>
-                    <label htmlFor="target_resolution_date">Target Resolution Date</label>
+                <div style={{ display: 'grid', gap: '8px' }}>
+                    <label htmlFor={`risk-target-${mode}`}>Target Resolution Date</label>
                     <input
-                        id="target_resolution_date"
+                        id={`risk-target-${mode}`}
                         name="target_resolution_date"
                         type="date"
                         value={formData.target_resolution_date}
@@ -258,7 +236,7 @@ const RiskForm = ({
                     />
                 </div>
 
-                    <div style={{ display: 'grid', gap: '8px' }}>
+                <div style={{ display: 'grid', gap: '8px' }}>
                     <label>Frameworks</label>
                     <MultiCheckbox
                         options={frameworks}
@@ -268,7 +246,7 @@ const RiskForm = ({
                     />
                 </div>
 
-                    <div style={{ display: 'grid', gap: '8px' }}>
+                <div style={{ display: 'grid', gap: '8px' }}>
                     <label>Assets</label>
                     <MultiCheckbox
                         options={assets}
@@ -288,9 +266,9 @@ const RiskForm = ({
                 </div>
 
                 <div style={{ display: 'grid', gap: '8px' }}>
-                    <label htmlFor="mitigation_plan">Mitigation Plan</label>
+                    <label htmlFor={`risk-mitigation-${mode}`}>Mitigation Plan</label>
                     <textarea
-                        id="mitigation_plan"
+                        id={`risk-mitigation-${mode}`}
                         name="mitigation_plan"
                         rows={2}
                         value={formData.mitigation_plan}
@@ -298,31 +276,30 @@ const RiskForm = ({
                     />
                 </div>
 
-                    {error && <p style={{ color: '#dc2626', margin: 0 }}>{error}</p>}
+                {error && <p style={{ color: '#dc2626', margin: 0 }}>{error}</p>}
 
-                    <div style={{ display: 'flex', gap: '12px' }}>
-                        <button type="submit" disabled={isSubmitting}>
-                            {isSubmitting ? 'Saving…' : mode === 'edit' ? 'Save changes' : 'Create risk'}
+                <div style={{ display: 'flex', gap: '12px' }}>
+                    <button type="submit" disabled={isSubmitting}>
+                        {isSubmitting ? 'Saving...' : mode === 'edit' ? 'Save changes' : 'Create risk'}
+                    </button>
+                    {mode === 'edit' && (
+                        <button
+                            type="button"
+                            onClick={onCancel}
+                            style={{
+                                padding: '10px 16px',
+                                borderRadius: '8px',
+                                border: '1px solid #cbd5f5',
+                                background: '#fff',
+                                cursor: 'pointer',
+                            }}
+                        >
+                            Cancel
                         </button>
-                        {mode === 'edit' && (
-                            <button
-                                type="button"
-                                onClick={onCancel}
-                                style={{
-                                    padding: '10px 16px',
-                                    borderRadius: '8px',
-                                    border: '1px solid #cbd5f5',
-                                    background: '#fff',
-                                    cursor: 'pointer',
-                                }}
-                            >
-                                Cancel
-                            </button>
-                        )}
-                    </div>
-                </form>
-            )}
-        </div>
+                    )}
+                </div>
+            </form>
+        </CollapsibleFormSection>
     );
 };
 
@@ -347,7 +324,7 @@ const MultiCheckbox = ({ options, selected, onChange, labelKey = 'name' }) => {
                     <span>
                         {option[labelKey] || option.name || option.code}
                         {option.code && (option[labelKey] || option.name) !== option.code ? ` (${option.code})` : ''}
-                        {labelKey === 'reference_id' && option.name ? ` – ${option.name}` : ''}
+                        {labelKey === 'reference_id' && option.name ? ` - ${option.name}` : ''}
                     </span>
                 </label>
             ))}

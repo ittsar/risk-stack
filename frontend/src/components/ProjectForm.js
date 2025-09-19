@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { apiRequest } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import DirectoryAutocomplete from './DirectoryAutocomplete';
+import CollapsibleFormSection from './CollapsibleFormSection';
 
 const initialState = {
     name: '',
@@ -66,7 +67,7 @@ const ProjectForm = ({
 
             try {
                 if (mode === 'edit' && project) {
-                    await apiRequest('/api/projects/' + project.id + '/', {
+                    await apiRequest(`/api/projects/${project.id}/`, {
                         method: 'PATCH',
                         token,
                         body: payload,
@@ -93,131 +94,107 @@ const ProjectForm = ({
     );
 
     const collapsed = typeof isCollapsed === 'boolean' ? isCollapsed : false;
-    const heading = mode === 'edit' && project
-        ? 'Edit Project – ' + project.name
-        : mode === 'edit'
-        ? 'Edit Project'
-        : 'Create New Project';
-    const toggleLabel = collapsed ? (mode === 'edit' ? 'Expand editor' : 'New project') : 'Collapse';
+    const heading = mode === 'edit' && project ? `Edit Project - ${project.name}` : mode === 'edit' ? 'Edit Project' : 'Create New Project';
+    const handleToggle = typeof isCollapsed === 'boolean' && setIsCollapsed ? () => setIsCollapsed((prev) => !prev) : undefined;
 
     return (
-        <div className="card">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h2 style={{ margin: 0 }}>{heading}</h2>
-                {typeof isCollapsed === 'boolean' && setIsCollapsed ? (
-                    <button
-                        type="button"
-                        onClick={() => setIsCollapsed((prev) => !prev)}
-                        style={{
-                            border: 'none',
-                            background: 'transparent',
-                            cursor: 'pointer',
-                            color: '#2563eb',
-                        }}
-                    >
-                        {toggleLabel}
-                    </button>
-                ) : null}
-            </div>
+        <CollapsibleFormSection title={heading} collapsed={collapsed} onToggle={handleToggle}>
+            <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '16px', marginTop: '16px' }}>
+                <div style={{ display: 'grid', gap: '8px' }}>
+                    <label htmlFor={`project-name-${mode}`}>Name</label>
+                    <input
+                        id={`project-name-${mode}`}
+                        name="name"
+                        type="text"
+                        value={formData.name}
+                        onChange={handleInputChange}
+                        required
+                    />
+                </div>
 
-            {!collapsed && (
-                <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '16px', marginTop: '16px' }}>
+                <div style={{ display: 'grid', gap: '8px' }}>
+                    <label htmlFor={`project-description-${mode}`}>Description</label>
+                    <textarea
+                        id={`project-description-${mode}`}
+                        name="description"
+                        rows={3}
+                        value={formData.description}
+                        onChange={handleInputChange}
+                    />
+                </div>
+
+                <div style={{ display: 'grid', gap: '8px', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
+                    <DirectoryAutocomplete
+                        id={`project-owner-${mode}-${project?.id ?? 'new'}`}
+                        label="Owner"
+                        value={formData.owner}
+                        onChange={(newValue) => setFormData((prev) => ({ ...prev, owner: newValue }))}
+                        placeholder="Owner name or username"
+                    />
                     <div style={{ display: 'grid', gap: '8px' }}>
-                        <label htmlFor={'project-name-' + mode}>Name</label>
+                        <label htmlFor={`project-status-${mode}`}>Status</label>
+                        <select
+                            id={`project-status-${mode}`}
+                            name="status"
+                            value={formData.status}
+                            onChange={handleInputChange}
+                        >
+                            {statusOptions.map((option) => (
+                                <option value={option.value} key={option.value}>
+                                    {option.label}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                </div>
+
+                <div style={{ display: 'grid', gap: '8px', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
+                    <div style={{ display: 'grid', gap: '8px' }}>
+                        <label htmlFor={`project-start-${mode}`}>Start Date</label>
                         <input
-                            id={'project-name-' + mode}
-                            name="name"
-                            type="text"
-                            value={formData.name}
+                            id={`project-start-${mode}`}
+                            name="start_date"
+                            type="date"
+                            value={formData.start_date}
                             onChange={handleInputChange}
-                            required
                         />
                     </div>
-
                     <div style={{ display: 'grid', gap: '8px' }}>
-                        <label htmlFor={'project-description-' + mode}>Description</label>
-                        <textarea
-                            id={'project-description-' + mode}
-                            name="description"
-                            rows={3}
-                            value={formData.description}
+                        <label htmlFor={`project-target-${mode}`}>Target End Date</label>
+                        <input
+                            id={`project-target-${mode}`}
+                            name="target_end_date"
+                            type="date"
+                            value={formData.target_end_date}
                             onChange={handleInputChange}
                         />
                     </div>
+                </div>
 
-                    <div style={{ display: 'grid', gap: '8px', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
-                        <DirectoryAutocomplete
-                            id={'project-owner-' + mode + '-' + (project?.id ?? 'new')}
-                            label="Owner"
-                            value={formData.owner}
-                            onChange={(newValue) => setFormData((prev) => ({ ...prev, owner: newValue }))}
-                            placeholder="Owner name or username"
-                        />
-                        <div style={{ display: 'grid', gap: '8px' }}>
-                            <label htmlFor={'project-status-' + mode}>Status</label>
-                            <select
-                                id={'project-status-' + mode}
-                                name="status"
-                                value={formData.status}
-                                onChange={handleInputChange}
-                            >
-                                {statusOptions.map((option) => (
-                                    <option value={option.value} key={option.value}>
-                                        {option.label}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-                    </div>
+                {error && <p style={{ color: '#dc2626', margin: 0 }}>{error}</p>}
 
-                    <div style={{ display: 'grid', gap: '8px', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
-                        <div style={{ display: 'grid', gap: '8px' }}>
-                            <label htmlFor={'project-start-' + mode}>Start Date</label>
-                            <input
-                                id={'project-start-' + mode}
-                                name="start_date"
-                                type="date"
-                                value={formData.start_date}
-                                onChange={handleInputChange}
-                            />
-                        </div>
-                        <div style={{ display: 'grid', gap: '8px' }}>
-                            <label htmlFor={'project-target-' + mode}>Target End Date</label>
-                            <input
-                                id={'project-target-' + mode}
-                                name="target_end_date"
-                                type="date"
-                                value={formData.target_end_date}
-                                onChange={handleInputChange}
-                            />
-                        </div>
-                    </div>
-
-                    {error && <p style={{ color: '#dc2626', margin: 0 }}>{error}</p>}
-
-                    <div style={{ display: 'flex', gap: '12px' }}>
-                        <button type="submit" disabled={isSubmitting}>
-                            {isSubmitting ? 'Saving…' : mode === 'edit' ? 'Save changes' : 'Create project'}
+                <div style={{ display: 'flex', gap: '12px' }}>
+                    <button type="submit" disabled={isSubmitting}>
+                        {isSubmitting ? 'Saving...' : mode === 'edit' ? 'Save changes' : 'Create project'}
+                    </button>
+                    {mode === 'edit' && (
+                        <button
+                            type="button"
+                            onClick={onCancel}
+                            style={{
+                                padding: '10px 16px',
+                                borderRadius: '8px',
+                                border: '1px solid #cbd5f5',
+                                background: '#fff',
+                                cursor: 'pointer',
+                            }}
+                        >
+                            Cancel
                         </button>
-                        {mode === 'edit' && (
-                            <button
-                                type="button"
-                                onClick={onCancel}
-                                style={{
-                                    padding: '10px 16px',
-                                    borderRadius: '8px',
-                                    border: '1px solid #cbd5f5',
-                                    background: '#fff',
-                                    cursor: 'pointer',
-                                }}
-                            >
-                                Cancel
-                            </button>
-                        )}
-                    </div>
-                </form>
-            )}
-        </div>
+                    )}
+                </div>
+            </form>
+        </CollapsibleFormSection>
     );
 };
 

@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { apiRequest } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import DirectoryAutocomplete from './DirectoryAutocomplete';
+import CollapsibleFormSection from './CollapsibleFormSection';
 
 const assetTypeOptions = [
     { value: 'application', label: 'Application' },
@@ -40,7 +41,6 @@ const AssetForm = ({
                 const response = await apiRequest('/api/projects/', { token });
                 setProjects(response.results ?? response ?? []);
             } catch (err) {
-                // Non-fatal, keep empty list
                 setProjects([]);
             }
         };
@@ -110,139 +110,115 @@ const AssetForm = ({
     );
 
     const collapsed = typeof isCollapsed === 'boolean' ? isCollapsed : false;
-    const heading = mode === 'edit' && asset
-        ? `Edit Asset – ${asset.name}`
-        : mode === 'edit'
-        ? 'Edit Asset'
-        : 'Create New Asset';
-    const toggleLabel = collapsed ? (mode === 'edit' ? 'Expand editor' : 'New asset') : 'Collapse';
+    const heading = mode === 'edit' && asset ? `Edit Asset - ${asset.name}` : mode === 'edit' ? 'Edit Asset' : 'Create New Asset';
+    const handleToggle = typeof isCollapsed === 'boolean' && setIsCollapsed ? () => setIsCollapsed((prev) => !prev) : undefined;
 
     return (
-        <div className="card">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h2 style={{ margin: 0 }}>{heading}</h2>
-                {typeof isCollapsed === 'boolean' && setIsCollapsed ? (
-                    <button
-                        type="button"
-                        onClick={() => setIsCollapsed((prev) => !prev)}
-                        style={{
-                            border: 'none',
-                            background: 'transparent',
-                            cursor: 'pointer',
-                            color: '#2563eb',
-                        }}
-                    >
-                        {toggleLabel}
-                    </button>
-                ) : null}
-            </div>
+        <CollapsibleFormSection title={heading} collapsed={collapsed} onToggle={handleToggle}>
+            <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '16px', marginTop: '16px' }}>
+                <div style={{ display: 'grid', gap: '8px' }}>
+                    <label htmlFor={`asset-name-${mode}`}>Name</label>
+                    <input
+                        id={`asset-name-${mode}`}
+                        name="name"
+                        type="text"
+                        value={formData.name}
+                        onChange={handleInputChange}
+                        required
+                    />
+                </div>
 
-            {!collapsed && (
-                <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '16px', marginTop: '16px' }}>
+                <div style={{ display: 'grid', gap: '8px' }}>
+                    <label htmlFor={`asset-description-${mode}`}>Description</label>
+                    <textarea
+                        id={`asset-description-${mode}`}
+                        name="description"
+                        rows={3}
+                        value={formData.description}
+                        onChange={handleInputChange}
+                    />
+                </div>
+
+                <div style={{ display: 'grid', gap: '8px', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
                     <div style={{ display: 'grid', gap: '8px' }}>
-                        <label htmlFor={`asset-name-${mode}`}>Name</label>
+                        <label htmlFor={`asset-type-${mode}`}>Asset Type</label>
+                        <select
+                            id={`asset-type-${mode}`}
+                            name="asset_type"
+                            value={formData.asset_type}
+                            onChange={handleInputChange}
+                        >
+                            {assetTypeOptions.map((option) => (
+                                <option value={option.value} key={option.value}>
+                                    {option.label}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <DirectoryAutocomplete
+                        id={`asset-owner-${mode}-${asset?.id ?? 'new'}`}
+                        label="Business Owner"
+                        value={formData.business_owner}
+                        onChange={(newValue) => setFormData((prev) => ({ ...prev, business_owner: newValue }))}
+                        placeholder="Owner name or username"
+                    />
+                </div>
+
+                <div style={{ display: 'grid', gap: '8px', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
+                    <div style={{ display: 'grid', gap: '8px' }}>
+                        <label htmlFor={`asset-criticality-${mode}`}>Criticality</label>
                         <input
-                            id={`asset-name-${mode}`}
-                            name="name"
+                            id={`asset-criticality-${mode}`}
+                            name="criticality"
                             type="text"
-                            value={formData.name}
+                            value={formData.criticality}
                             onChange={handleInputChange}
-                            required
+                            placeholder="e.g. High, Medium"
                         />
                     </div>
-
                     <div style={{ display: 'grid', gap: '8px' }}>
-                        <label htmlFor={`asset-description-${mode}`}>Description</label>
-                        <textarea
-                            id={`asset-description-${mode}`}
-                            name="description"
-                            rows={3}
-                            value={formData.description}
+                        <label htmlFor={`asset-project-${mode}`}>Project</label>
+                        <select
+                            id={`asset-project-${mode}`}
+                            name="project"
+                            value={formData.project}
                             onChange={handleInputChange}
-                        />
+                        >
+                            <option value="">Unassigned</option>
+                            {projects.map((projectItem) => (
+                                <option value={projectItem.id} key={projectItem.id}>
+                                    {projectItem.name}
+                                </option>
+                            ))}
+                        </select>
                     </div>
+                </div>
 
-                    <div style={{ display: 'grid', gap: '8px', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
-                        <div style={{ display: 'grid', gap: '8px' }}>
-                            <label htmlFor={`asset-type-${mode}`}>Asset Type</label>
-                            <select
-                                id={`asset-type-${mode}`}
-                                name="asset_type"
-                                value={formData.asset_type}
-                                onChange={handleInputChange}
-                            >
-                                {assetTypeOptions.map((option) => (
-                                    <option value={option.value} key={option.value}>
-                                        {option.label}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
+                {error && <p style={{ color: '#dc2626', margin: 0 }}>{error}</p>}
 
-                        <DirectoryAutocomplete
-                            id={`asset-owner-${mode}-${asset?.id ?? 'new'}`}
-                            label="Business Owner"
-                            value={formData.business_owner}
-                            onChange={(newValue) => setFormData((prev) => ({ ...prev, business_owner: newValue }))}
-                            placeholder="Owner name or username"
-                        />
-                    </div>
-
-                    <div style={{ display: 'grid', gap: '8px', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
-                        <div style={{ display: 'grid', gap: '8px' }}>
-                            <label htmlFor={`asset-criticality-${mode}`}>Criticality</label>
-                            <input
-                                id={`asset-criticality-${mode}`}
-                                name="criticality"
-                                type="text"
-                                value={formData.criticality}
-                                onChange={handleInputChange}
-                                placeholder="e.g. High, Medium"
-                            />
-                        </div>
-                        <div style={{ display: 'grid', gap: '8px' }}>
-                            <label htmlFor={`asset-project-${mode}`}>Project</label>
-                            <select
-                                id={`asset-project-${mode}`}
-                                name="project"
-                                value={formData.project}
-                                onChange={handleInputChange}
-                            >
-                                <option value="">Unassigned</option>
-                                {projects.map((projectItem) => (
-                                    <option value={projectItem.id} key={projectItem.id}>
-                                        {projectItem.name}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-                    </div>
-
-                    {error && <p style={{ color: '#dc2626', margin: 0 }}>{error}</p>}
-
-                    <div style={{ display: 'flex', gap: '12px' }}>
-                        <button type="submit" disabled={isSubmitting}>
-                            {isSubmitting ? 'Saving…' : mode === 'edit' ? 'Save changes' : 'Create asset'}
+                <div style={{ display: 'flex', gap: '12px' }}>
+                    <button type="submit" disabled={isSubmitting}>
+                        {isSubmitting ? 'Saving...' : mode === 'edit' ? 'Save changes' : 'Create asset'}
+                    </button>
+                    {mode === 'edit' && (
+                        <button
+                            type="button"
+                            onClick={onCancel}
+                            style={{
+                                padding: '10px 16px',
+                                borderRadius: '8px',
+                                border: '1px solid #cbd5f5',
+                                background: '#fff',
+                                cursor: 'pointer',
+                            }}
+                        >
+                            Cancel
                         </button>
-                        {mode === 'edit' && (
-                            <button
-                                type="button"
-                                onClick={onCancel}
-                                style={{
-                                    padding: '10px 16px',
-                                    borderRadius: '8px',
-                                    border: '1px solid #cbd5f5',
-                                    background: '#fff',
-                                    cursor: 'pointer',
-                                }}
-                            >
-                                Cancel
-                            </button>
-                        )}
-                    </div>
-                </form>
-            )}
-        </div>
+                    )}
+                </div>
+            </form>
+        </CollapsibleFormSection>
     );
 };
 
