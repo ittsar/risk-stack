@@ -85,6 +85,26 @@ Prefer working directly with the scripts? Use `./scripts/bootstrap.sh` or `power
 
 After the frontend install you can review dependency advisories with `cd frontend && npm audit`.
 
+## CPRT framework controls
+
+To pull the latest NIST SP 800-53 CPRT export and load it into the backend (containerised):
+
+```bash
+curl -L "<DOWNLOAD_URL>" -o backend/cprt_SP_800_53_5_2_0_09-19-2025.json   && docker compose run --rm backend python manage.py import_cprt_controls        --file /app/cprt_SP_800_53_5_2_0_09-19-2025.json        --framework-code NIST-SP-800-53        --framework-name "NIST SP 800-53 Rev 5.2"        --framework-description "Security and Privacy Controls for Information Systems and Organizations."
+```
+
+Or use the helper command (defaults can be overridden with `CPRT_*` env vars):
+
+```bash
+./go.bash import-cprt <DOWNLOAD_URL>
+```
+
+```powershell
+go.bat import-cprt <DOWNLOAD_URL>
+```
+
+The file is saved under `backend/` so the importer can read it via the compose volume mount.
+
 ## Demo data & credentials
 Most workflows run this automatically (the `go` helpers and bootstrap scripts with `--seed-demo-data` / `-SeedDemoData`). Run it manually if you need to refresh the sample content.
 
@@ -170,6 +190,7 @@ The React app reads `REACT_APP_API_BASE_URL` to know where to call the backend. 
 
 ## Contributing
 Pull requests and issue reports are welcome — feel free to open a discussion for larger changes before submitting a PR.
+
 
 
 

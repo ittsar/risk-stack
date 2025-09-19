@@ -22,6 +22,7 @@ Commands:
   docker-down           docker compose down
   docker-logs           docker compose logs -f
   docker-ps             docker compose ps
+  import-cprt           Download CPRT JSON and import into backend
   native-bootstrap      scripts\bootstrap.ps1 (additional args forwarded)
   native-run            scripts\run.ps1 (additional args forwarded)
   help                  Show this message
@@ -33,6 +34,7 @@ Examples:
   go.bat docker-down --volumes
   go.bat native-bootstrap -SeedDemoData -ImportFrameworkControls
   go.bat native-run -SkipMigrate
+  go.bat import-cprt https://example.com/cprt.json
 "@
 }
 
@@ -65,6 +67,25 @@ switch ($commandLower) {
     'logs' { & docker compose logs -f @remaining; break }
     'docker-ps' { & docker compose ps @remaining; break }
     'ps' { & docker compose ps @remaining; break }
+    'import-cprt' {
+        if (-not $remaining -or $remaining.Count -lt 1) {
+            Write-Error 'Usage: go.bat import-cprt <url>'
+            Write-Host 'Optional env: CPRT_FRAMEWORK_CODE, CPRT_FRAMEWORK_NAME, CPRT_FRAMEWORK_DESCRIPTION, CPRT_FILENAME'
+            exit 1
+        }
+        $url = $remaining[0]
+        $frameworkCode = if ($env:CPRT_FRAMEWORK_CODE) { $env:CPRT_FRAMEWORK_CODE } else { 'NIST-SP-800-53' }
+        $frameworkName = if ($env:CPRT_FRAMEWORK_NAME) { $env:CPRT_FRAMEWORK_NAME } else { 'NIST SP 800-53 Rev 5.2' }
+        $frameworkDescription = if ($env:CPRT_FRAMEWORK_DESCRIPTION) { $env:CPRT_FRAMEWORK_DESCRIPTION } else { 'Security and Privacy Controls for Information Systems and Organizations.' }
+        $sanitized = ($url -split '\?')[0]
+        $filename = if ($env:CPRT_FILENAME) { $env:CPRT_FILENAME } else { [System.IO.Path]::GetFileName($sanitized) }
+        if ([string]::IsNullOrWhiteSpace($filename)) { $filename = 'cprt_import.json' }
+        $targetPath = Join-Path $repoRoot (Join-Path 'backend' $filename)
+        Write-Host "Downloading $url -> $targetPath"
+        Invoke-WebRequest -Uri $url -OutFile $targetPath
+        & docker compose run --rm backend python manage.py import_cprt_controls --file "/app/$filename" --framework-code $frameworkCode --framework-name $frameworkName --framework-description $frameworkDescription
+        break
+    }
     'native-bootstrap' {
         & (Join-Path $scriptDir 'bootstrap.ps1') @remaining
         break
