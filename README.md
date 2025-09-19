@@ -46,12 +46,28 @@ risk-stack
     └── package.json
 ```
 
+## Turn-key demo
+Spin up the stack with the `go` helpers (docker compose first):
+
+- Windows: `go.bat`
+- macOS/Linux: `./go.bash`
+
+Without arguments they run `docker compose up --build`. Examples:
+
+- `./go.bash docker-down --volumes`
+- `./go.bash docker-logs`
+- `./go.bash native-bootstrap --seed-demo-data --import-cprt-controls`
+- `./go.bash native-run --skip-migrate`
+
+Use `go.bat help` or `./go.bash help` to list available commands.
+
 ## MVP features
 - REST endpoints for frameworks, controls, projects, assets, risks, and findings with filtering, ordering, and summary analytics.
 - Directory endpoint for user lookups to power owner assignment from existing Django users.
 - Token-based authentication with auto-provisioned tokens for new users and OpenAPI documentation at `/api/openapi/` + `/api/docs/`.
 - Dashboard metrics (projects, risks, findings, assets, controls, frameworks) and risk severity heatmap.
 - Framework alignment view to map risks across NIST CSF, ISO/IEC 27001, PCI DSS, and HIPAA.
+- Controls workspace for managing internal controls and mapping them to imported framework controls.
 - Docker compose stack with Postgres and Nginx reverse proxy so the browser always talks to a single origin.
 
 ## Prerequisites
@@ -59,17 +75,19 @@ risk-stack
 - Node.js 14+ (or the latest LTS) and npm
 - PostgreSQL (optional, only if you set `DATABASE_URL`)
 
-## Quick bootstrap
-- Linux/macOS: `./scripts/bootstrap.sh`
-- Windows (PowerShell): `powershell -ExecutionPolicy Bypass -File scripts/bootstrap.ps1`
+## Quick bootstrap (optional native stack)
+- Linux/macOS: `./go.bash native-bootstrap --seed-demo-data --import-cprt-controls`
+- Windows (PowerShell): `go.bat native-bootstrap -SeedDemoData -ImportFrameworkControls`
 
-Both scripts install backend/frontend dependencies, create local `.env` files from the examples, run database migrations, and execute the test suites. Use `scripts/bootstrap.ps1 -SkipTests` or `SKIP_TESTS=1 ./scripts/bootstrap.sh` if you want to skip automated tests.
+These commands reuse the bootstrap script to install dependencies, create `.env` files, run migrations, and - when the flags above are provided - import CPRT identifiers and seed demo content. Add `--skip-tests` / `-SkipTests` to bypass automated tests, `--start-servers` / `-StartServers` to launch the native dev servers, and `--cprt-file` / `-CprtFile` to point at a specific dataset.
+
+Prefer working directly with the scripts? Use `./scripts/bootstrap.sh` or `powershell -ExecutionPolicy Bypass -File scripts/bootstrap.ps1` with the same flags.
 
 After the frontend install you can review dependency advisories with `cd frontend && npm audit`.
 
-To automatically launch the dev servers after setup use `START_SERVERS=1 ./scripts/bootstrap.sh` on Linux/macOS or add `-StartServers` when invoking the PowerShell script.
-
 ## Demo data & credentials
+Most workflows run this automatically (the `go` helpers and bootstrap scripts with `--seed-demo-data` / `-SeedDemoData`). Run it manually if you need to refresh the sample content.
+
 1. `cd backend`
 2. `python manage.py migrate`
 3. `python manage.py seed_demo_data`
@@ -82,11 +100,13 @@ The seed command populates common frameworks (NIST CSF, ISO/IEC 27001, PCI DSS, 
 
 From Docker, run `docker compose exec backend python manage.py seed_demo_data` after the containers start.
 
-## Running the dev servers later
-- Linux/macOS: `./scripts/run.sh`
-- Windows (PowerShell): `powershell -ExecutionPolicy Bypass -File scripts/run.ps1`
+## Running the dev servers later (native)
+- Linux/macOS: `./go.bash native-run --skip-migrate`
+- Windows (PowerShell): `go.bat native-run -SkipMigrate`
 
-Both commands ensure migrations are applied (skip with `SKIP_MIGRATE=1 ./scripts/run.sh` or `scripts/run.ps1 -SkipMigrate`) and then start Django and React together. Press `Ctrl+C` (bash) or stop the PowerShell session to terminate both processes. On newer Node versions the scripts automatically set `NODE_OPTIONS=--openssl-legacy-provider` so Webpack 4 (CRA v4) can start.
+Drop the `--skip-migrate` / `-SkipMigrate` flag if you want the script to apply migrations first. Press `Ctrl+C` (bash) or stop the PowerShell session to terminate both processes. On newer Node versions the scripts automatically set `NODE_OPTIONS=--openssl-legacy-provider` so Webpack 4 (CRA v4) can start. Forward additional arguments to the React dev server by appending `--` (for example `./go.bash native-run -- --https`).
+
+You can still run `./scripts/run.sh` or `scripts/run.ps1` directly if you prefer.
 
 ## Django management helper
 - Linux/macOS: `./scripts/manage.sh migrate`, `./scripts/manage.sh createsuperuser`, etc.
@@ -150,3 +170,18 @@ The React app reads `REACT_APP_API_BASE_URL` to know where to call the backend. 
 
 ## Contributing
 Pull requests and issue reports are welcome — feel free to open a discussion for larger changes before submitting a PR.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

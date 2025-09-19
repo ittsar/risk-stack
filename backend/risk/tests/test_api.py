@@ -16,8 +16,14 @@ class RiskApiTests(APITestCase):
         self.framework = models.Framework.objects.create(code='NIST-CSF', name='NIST Cybersecurity Framework')
         self.project = models.Project.objects.create(name='New Product Launch')
         self.asset = models.Asset.objects.create(name='Customer Portal', asset_type='application', project=self.project)
+        self.framework_control = models.FrameworkControl.objects.create(
+            framework=self.framework,
+            control_id='AC-01',
+            title='Access Control Policy',
+        )
         self.control = models.Control.objects.create(reference_id='CTRL-1', name='Access Control Policy')
         self.control.frameworks.add(self.framework)
+        self.control.framework_controls.add(self.framework_control)
 
     def _risk_payload(self):
         return {
@@ -44,6 +50,12 @@ class RiskApiTests(APITestCase):
         risk_id = create_response.data['id']
         self.assertEqual(create_response.data['severity_label'], 'Critical')
 
+        controls_payload = create_response.data['controls']
+        self.assertEqual(len(controls_payload), 1)
+        control_record = controls_payload[0]
+        self.assertEqual(control_record['reference_id'], 'CTRL-1')
+        self.assertEqual(control_record['framework_controls'][0]['control_id'], 'AC-01')
+
         list_response = self.client.get('/api/risks/?status=identified')
         self.assertEqual(list_response.status_code, status.HTTP_200_OK)
         self.assertEqual(list_response.data['count'], 1)
@@ -61,6 +73,40 @@ class RiskApiTests(APITestCase):
         response = self.client.get('/api/risks/?framework=NIST-CSF')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['count'], 1)
+
+    def test_control_list_includes_framework_controls(self):
+        response = self.client.get('/api/controls/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        payload = response.data
+        results = payload.get('results', payload)
+        self.assertTrue(any(item['framework_controls'] for item in results))
+        first_control = results[0]
+        self.assertEqual(first_control['framework_controls'][0]['control_id'], 'AC-01')
+
+    def test_create_control_with_framework_controls(self):
+        payload = {
+            'reference_id': 'CTRL-99',
+            'name': 'Privileged Access Review',
+            'framework_control_ids': [self.framework_control.id],
+        }
+        response = self.client.post('/api/controls/', payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['framework_controls'][0]['control_id'], 'AC-01')
+        framework_codes = {item['code'] for item in response.data['frameworks']}
+        self.assertIn(self.framework.code, framework_codes)
+
+    def test_control_filter_by_framework_control(self):
+        response = self.client.get(f'/api/controls/?framework_control={self.framework_control.id}')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['count'], 1)
+
+    def test_framework_control_listing_endpoint(self):
+        response = self.client.get('/api/framework-controls/?framework=NIST-CSF')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        payload = response.data
+        results = payload.get('results', payload)
+        self.assertGreaterEqual(len(results), 1)
+        self.assertEqual(results[0]['framework_code'], 'NIST-CSF')
 
     def test_risk_summary_and_dashboard(self):
         risk = models.Risk.objects.create(
@@ -101,7 +147,6 @@ class RiskApiTests(APITestCase):
         models.Framework.objects.all().delete()
         self.assertEqual(models.Framework.objects.count(), 0)
         self.client.credentials()
-        # load fixture to confirm it can be applied without error
         from django.core.management import call_command
 
         call_command('loaddata', 'frameworks')

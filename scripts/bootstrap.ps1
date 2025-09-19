@@ -1,6 +1,12 @@
 param(
     [switch]$SkipTests,
-    [switch]$StartServers
+    [switch]$StartServers,
+    [switch]$ImportFrameworkControls,
+    [switch]$SeedDemoData,
+    [string]$CprtFile,
+    [string]$FrameworkCode = 'NIST-SP-800-53',
+    [string]$FrameworkName = 'NIST SP 800-53 Rev 5.2',
+    [string]$FrameworkDescription = 'Security and Privacy Controls for Information Systems and Organizations.'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -35,6 +41,44 @@ function Resolve-PythonCommand {
     throw 'Python 3 is required but was not found in PATH.'
 }
 
+function Resolve-CprtFile {
+    param(
+        [string]$ExplicitPath,
+        [string]$SearchRoot
+    )
+
+    if ($ExplicitPath) {
+        $resolved = Resolve-Path $ExplicitPath -ErrorAction SilentlyContinue
+        if (-not $resolved) {
+            throw "Specified CPRT file not found: $ExplicitPath"
+        }
+        return $resolved.Path
+    }
+
+    $pattern = 'cprt_SP_800_53*.json'
+    $candidate = Get-ChildItem -Path $SearchRoot -Filter $pattern -File -ErrorAction SilentlyContinue |
+        Sort-Object LastWriteTime -Descending |
+        Select-Object -First 1
+
+    if ($candidate) {
+        return $candidate.FullName
+    }
+
+    return $null
+}
+
+if (-not $SkipTests -and $env:SKIP_TESTS) {
+    $SkipTests = $true
+}
+
+if (-not $ImportFrameworkControls -and $env:IMPORT_CPRT_CONTROLS) {
+    $ImportFrameworkControls = $true
+}
+
+if (-not $SeedDemoData -and $env:SEED_DEMO_DATA) {
+    $SeedDemoData = $true
+}
+
 $pythonCommand = Resolve-PythonCommand
 $venvPath = Join-Path $backendDir '.venv'
 
@@ -60,8 +104,26 @@ if (-not (Test-Path $envFile) -and (Test-Path $envExample)) {
 }
 
 & $venvPython (Join-Path $backendDir 'manage.py') migrate
+if ($SeedDemoData) {
+    & $venvPython (Join-Path $backendDir 'manage.py') seed_demo_data
+}
 if (-not $SkipTests) {
     & $venvPython (Join-Path $backendDir 'manage.py') test
+}
+
+if ($ImportFrameworkControls) {
+    $cprtPath = Resolve-CprtFile -ExplicitPath $CprtFile -SearchRoot $repoRoot
+    if (-not $cprtPath) {
+        Write-Warning 'ImportFrameworkControls requested but no CPRT dataset was found.'
+    }
+    else {
+        Write-Host "Importing framework controls from $cprtPath ..."
+        & $venvPython (Join-Path $backendDir 'manage.py') import_cprt_controls `
+            --file $cprtPath `
+            --framework-code $FrameworkCode `
+            --framework-name $FrameworkName `
+            --framework-description $FrameworkDescription
+    }
 }
 
 Push-Location $frontendDir

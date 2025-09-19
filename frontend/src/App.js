@@ -6,6 +6,7 @@ import RisksPage from './pages/RisksPage';
 import ProjectsPage from './pages/ProjectsPage';
 import AssetsPage from './pages/AssetsPage';
 import FrameworksPage from './pages/FrameworksPage';
+import ControlsPage from './pages/ControlsPage';
 import LoginPage from './pages/LoginPage';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
@@ -34,6 +35,7 @@ const AppLayout = () => {
                     <PrivateRoute path="/risks" component={RisksPage} />
                     <PrivateRoute path="/projects" component={ProjectsPage} />
                     <PrivateRoute path="/assets" component={AssetsPage} />
+                    <PrivateRoute path="/controls" component={ControlsPage} />
                     <PrivateRoute path="/frameworks" component={FrameworksPage} />
                     <Redirect exact from="/" to="/dashboard" />
                     <Route render={() => <Redirect to="/dashboard" />} />

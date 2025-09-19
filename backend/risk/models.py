@@ -23,6 +23,20 @@ class Framework(TimeStampedModel):
         return f"{self.code} - {self.name}"
 
 
+class FrameworkControl(TimeStampedModel):
+    framework = models.ForeignKey(Framework, related_name="framework_controls", on_delete=models.CASCADE)
+    control_id = models.CharField(max_length=100)
+    title = models.CharField(max_length=255)
+    element_type = models.CharField(max_length=50, blank=True, default="")
+
+    class Meta:
+        unique_together = ("framework", "control_id")
+        ordering = ["framework", "control_id"]
+
+    def __str__(self):
+        return f"{self.framework.code}::{self.control_id}"
+
+
 class Project(TimeStampedModel):
     STATUS_CHOICES = [
         ("planning", "Planning"),
@@ -73,6 +87,7 @@ class Control(TimeStampedModel):
     reference_id = models.CharField(max_length=100, unique=True)
     name = models.CharField(max_length=150)
     description = models.TextField(blank=True)
+    framework_controls = models.ManyToManyField("FrameworkControl", related_name="controls", blank=True)
     frameworks = models.ManyToManyField(Framework, related_name="controls", blank=True)
 
     class Meta:

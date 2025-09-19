@@ -4,10 +4,47 @@ from rest_framework import serializers
 from . import models
 
 
+class FrameworkControlSummarySerializer(serializers.ModelSerializer):
+    framework_code = serializers.CharField(source="framework.code", read_only=True)
+
+    class Meta:
+        model = models.FrameworkControl
+        fields = ["id", "framework", "framework_code", "control_id", "title", "element_type"]
+        read_only_fields = fields
+
+
+class FrameworkControlSerializer(serializers.ModelSerializer):
+    framework_code = serializers.CharField(source="framework.code", read_only=True)
+    framework_name = serializers.CharField(source="framework.name", read_only=True)
+
+    class Meta:
+        model = models.FrameworkControl
+        fields = [
+            "id",
+            "framework",
+            "framework_code",
+            "framework_name",
+            "control_id",
+            "title",
+            "element_type",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["framework", "framework_code", "framework_name", "created_at", "updated_at"]
+
+
+class ControlSummarySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Control
+        fields = ["id", "reference_id", "name"]
+
+
 class FrameworkSerializer(serializers.ModelSerializer):
+    controls = ControlSummarySerializer(many=True, read_only=True)
+
     class Meta:
         model = models.Framework
-        fields = ["id", "code", "name", "description", "created_at", "updated_at"]
+        fields = ["id", "code", "name", "description", "created_at", "updated_at", "controls"]
         read_only_fields = ["created_at", "updated_at"]
 
 
@@ -17,6 +54,13 @@ class ControlSerializer(serializers.ModelSerializer):
         many=True,
         write_only=True,
         queryset=models.Framework.objects.all(),
+        required=False,
+    )
+    framework_controls = FrameworkControlSummarySerializer(many=True, read_only=True)
+    framework_control_ids = serializers.PrimaryKeyRelatedField(
+        many=True,
+        write_only=True,
+        queryset=models.FrameworkControl.objects.select_related("framework"),
         required=False,
     )
 
@@ -29,26 +73,42 @@ class ControlSerializer(serializers.ModelSerializer):
             "description",
             "frameworks",
             "framework_ids",
+            "framework_controls",
+            "framework_control_ids",
             "created_at",
             "updated_at",
         ]
         read_only_fields = ["created_at", "updated_at"]
 
-    def _update_frameworks(self, instance, framework_ids):
-        if framework_ids is not None:
-            instance.frameworks.set(framework_ids)
+    def _update_framework_relationships(self, instance, framework_objs, framework_control_objs):
+        if framework_control_objs is not None:
+            instance.framework_controls.set(framework_control_objs)
+        if framework_objs is not None or framework_control_objs is not None:
+            frameworks_to_assign = set()
+            if framework_objs is not None:
+                frameworks_to_assign.update(framework_objs)
+            else:
+                frameworks_to_assign.update(instance.frameworks.all())
+            if framework_control_objs is not None:
+                frameworks_to_assign.update(fc.framework for fc in framework_control_objs)
+            instance.frameworks.set(list(frameworks_to_assign))
 
     def create(self, validated_data):
-        framework_ids = validated_data.pop("framework_ids", [])
+        framework_objs = list(validated_data.pop("framework_ids", []))
+        framework_control_objs = list(validated_data.pop("framework_control_ids", []))
         control = super().create(validated_data)
-        if framework_ids:
-            control.frameworks.set(framework_ids)
+        self._update_framework_relationships(control, framework_objs, framework_control_objs)
         return control
 
     def update(self, instance, validated_data):
-        framework_ids = validated_data.pop("framework_ids", None)
+        framework_objs = validated_data.pop("framework_ids", None)
+        if framework_objs is not None:
+            framework_objs = list(framework_objs)
+        framework_control_objs = validated_data.pop("framework_control_ids", None)
+        if framework_control_objs is not None:
+            framework_control_objs = list(framework_control_objs)
         control = super().update(instance, validated_data)
-        self._update_frameworks(control, framework_ids)
+        self._update_framework_relationships(control, framework_objs, framework_control_objs)
         return control
 
 
@@ -153,7 +213,17 @@ class RiskSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
-        read_only_fields = ["created_at", "updated_at", "project_detail", "assets", "controls", "frameworks", "findings", "score", "severity_label"]
+        read_only_fields = [
+            "created_at",
+            "updated_at",
+            "project_detail",
+            "assets",
+            "controls",
+            "frameworks",
+            "findings",
+            "score",
+            "severity_label",
+        ]
 
     def _set_many_to_many(self, instance, field_name, ids):
         if ids is not None:

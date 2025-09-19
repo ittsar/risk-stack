@@ -9,6 +9,7 @@ const Navigation = () => {
         { to: '/risks', label: 'Risks' },
         { to: '/projects', label: 'Projects' },
         { to: '/assets', label: 'Assets' },
+        { to: '/controls', label: 'Controls' },
         { to: '/frameworks', label: 'Frameworks' },
     ];
 

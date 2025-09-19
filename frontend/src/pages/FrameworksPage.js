@@ -41,6 +41,8 @@ const FrameworksPage = () => {
         return risks.filter((risk) => risk.frameworks.some((framework) => framework.code === activeFramework));
     }, [risks, activeFramework]);
 
+    const activeFrameworkDetails = frameworks.find((framework) => framework.code === activeFramework);
+
     return (
         <div>
             <div className="page-header">
@@ -72,6 +74,32 @@ const FrameworksPage = () => {
                     ))}
                 </div>
             </div>
+
+            {activeFramework && activeFrameworkDetails && activeFrameworkDetails.controls?.length > 0 && (
+                <div className="card" style={{ marginBottom: '24px' }}>
+                    <h2>
+                        Controls mapped to <span style={{ color: '#2563eb' }}>{activeFramework}</span>
+                    </h2>
+                    <div style={{ overflowX: 'auto' }}>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Reference</th>
+                                    <th>Name</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {activeFrameworkDetails.controls.map((control) => (
+                                    <tr key={control.id}>
+                                        <td>{control.reference_id}</td>
+                                        <td>{control.name}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            )}
 
             <div className="card">
                 <h2>
