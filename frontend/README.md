@@ -1,0 +1,26 @@
+# Frontend Documentation
+
+React single-page application bootstrapped with Create React App.
+
+## Quickstart
+1. Navigate to this directory: `cd frontend`
+2. Copy `.env.example` to `.env.local` (optional). Leave `REACT_APP_API_BASE_URL` empty—the app will use its current origin—or set it to a full URL if needed.
+3. Install dependencies: `npm install`
+4. Run the development server: `npm start`
+
+## Environment variables
+Only variables prefixed with `REACT_APP_` are exposed to the browser.
+
+| Variable | Purpose | Default |
+| --- | --- | --- |
+| `REACT_APP_API_BASE_URL` | Base URL for the Django backend | `http://localhost:8000` |
+
+## API integration
+`src/components/ExampleComponent.js` fetches `/api/health/` from the backend and renders the JSON payload so you can verify the round trip immediately after both servers start.
+
+## Available scripts
+- `npm start` — runs the app in development mode at `http://localhost:3000`.
+- `npm run build` — builds the app for production in the `build` folder.
+- `npm test` — runs the interactive test runner.
+
+Refer to the main `README.md` for instructions on running the frontend alongside the Django backend.
