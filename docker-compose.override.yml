@@ -1,0 +1,11 @@
+version: "3.9"
+
+services:
+  backend:
+    environment:
+      DJANGO_ALLOWED_HOSTS: "localhost,127.0.0.1,nginx,backend,risk.rmk.lol"
+      CORS_ALLOWED_ORIGINS: "http://localhost,http://127.0.0.1,http://localhost:3000,http://127.0.0.1:3000,https://risk.rmk.lol"
+      CSRF_TRUSTED_ORIGINS: "http://localhost,http://127.0.0.1,http://localhost:3000,https://risk.rmk.lol"
+  nginx:
+    ports:
+      - "12000:80"
