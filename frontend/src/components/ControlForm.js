@@ -212,7 +212,7 @@ const ControlForm = ({
         <CollapsibleFormSection
             title={heading}
             collapsed={collapsed}
-            onToggle={handleSectionToggle}
+            onToggle={handleToggle}
             style={{ marginBottom: '24px' }}
         >
             <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '16px', marginTop: '16px' }}>
@@ -348,3 +348,4 @@ const ControlForm = ({
 };
 
 export default ControlForm;
+
