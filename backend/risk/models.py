@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.validators import MaxValueValidator, MinValueValidator
 
 
 class TimeStampedModel(models.Model):
@@ -97,6 +98,48 @@ class Control(TimeStampedModel):
         return f"{self.reference_id} - {self.name}"
 
 
+class Vulnerability(TimeStampedModel):
+    STATUS_CHOICES = [
+        ("open", "Open"),
+        ("in_review", "In Review"),
+        ("mitigating", "Mitigating"),
+        ("accepted", "Accepted"),
+        ("closed", "Closed"),
+    ]
+
+    SEVERITY_CHOICES = [
+        ("critical", "Critical"),
+        ("high", "High"),
+        ("medium", "Medium"),
+        ("low", "Low"),
+        ("informational", "Informational"),
+    ]
+
+    reference_id = models.CharField(max_length=100, unique=True)
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    status = models.CharField(max_length=25, choices=STATUS_CHOICES, default="open")
+    severity = models.CharField(max_length=25, choices=SEVERITY_CHOICES, default="medium")
+    cve_id = models.CharField(max_length=50, blank=True)
+    cvss_score = models.DecimalField(
+        max_digits=3,
+        decimal_places=1,
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(0), MaxValueValidator(10)],
+    )
+    cvss_vector = models.CharField(max_length=120, blank=True)
+    published_date = models.DateField(null=True, blank=True)
+    risks = models.ManyToManyField("Risk", related_name="vulnerabilities", blank=True)
+    controls = models.ManyToManyField("Control", related_name="vulnerabilities", blank=True)
+
+    class Meta:
+        ordering = ["-updated_at"]
+
+    def __str__(self):
+        return f"{self.reference_id} - {self.title}"
+
+
 class Risk(TimeStampedModel):
     STATUS_CHOICES = [
         ("identified", "Identified"),
@@ -171,3 +214,4 @@ class Finding(TimeStampedModel):
 
     def __str__(self):
         return self.title
+

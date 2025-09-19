@@ -39,6 +39,20 @@ class ControlSummarySerializer(serializers.ModelSerializer):
         fields = ["id", "reference_id", "name"]
 
 
+class RiskSummarySerializer(serializers.ModelSerializer):
+    severity_label = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = models.Risk
+        fields = ["id", "title", "severity_label", "status"]
+
+
+class VulnerabilitySummarySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Vulnerability
+        fields = ["id", "reference_id", "title", "status", "severity", "cvss_score"]
+
+
 class FrameworkSerializer(serializers.ModelSerializer):
     controls = ControlSummarySerializer(many=True, read_only=True)
 
@@ -63,6 +77,13 @@ class ControlSerializer(serializers.ModelSerializer):
         queryset=models.FrameworkControl.objects.select_related("framework"),
         required=False,
     )
+    vulnerabilities = VulnerabilitySummarySerializer(many=True, read_only=True)
+    vulnerability_ids = serializers.PrimaryKeyRelatedField(
+        many=True,
+        write_only=True,
+        queryset=models.Vulnerability.objects.all(),
+        required=False,
+    )
 
     class Meta:
         model = models.Control
@@ -75,6 +96,8 @@ class ControlSerializer(serializers.ModelSerializer):
             "framework_ids",
             "framework_controls",
             "framework_control_ids",
+            "vulnerabilities",
+            "vulnerability_ids",
             "created_at",
             "updated_at",
         ]
@@ -93,11 +116,18 @@ class ControlSerializer(serializers.ModelSerializer):
                 frameworks_to_assign.update(fc.framework for fc in framework_control_objs)
             instance.frameworks.set(list(frameworks_to_assign))
 
+    def _update_vulnerabilities(self, instance, vulnerability_ids):
+        if vulnerability_ids is not None:
+            instance.vulnerabilities.set(vulnerability_ids)
+
     def create(self, validated_data):
         framework_objs = list(validated_data.pop("framework_ids", []))
         framework_control_objs = list(validated_data.pop("framework_control_ids", []))
+        vulnerability_ids = list(validated_data.pop("vulnerability_ids", []))
         control = super().create(validated_data)
         self._update_framework_relationships(control, framework_objs, framework_control_objs)
+        if vulnerability_ids:
+            control.vulnerabilities.set(vulnerability_ids)
         return control
 
     def update(self, instance, validated_data):
@@ -107,8 +137,10 @@ class ControlSerializer(serializers.ModelSerializer):
         framework_control_objs = validated_data.pop("framework_control_ids", None)
         if framework_control_objs is not None:
             framework_control_objs = list(framework_control_objs)
+        vulnerability_ids = validated_data.pop("vulnerability_ids", None)
         control = super().update(instance, validated_data)
         self._update_framework_relationships(control, framework_objs, framework_control_objs)
+        self._update_vulnerabilities(control, vulnerability_ids)
         return control
 
 
@@ -169,6 +201,59 @@ class FindingSerializer(serializers.ModelSerializer):
         read_only_fields = ["created_at", "updated_at"]
 
 
+class VulnerabilitySerializer(serializers.ModelSerializer):
+    controls = ControlSummarySerializer(many=True, read_only=True)
+    control_ids = serializers.PrimaryKeyRelatedField(
+        queryset=models.Control.objects.all(), many=True, write_only=True, required=False
+    )
+    risks = RiskSummarySerializer(many=True, read_only=True)
+    risk_ids = serializers.PrimaryKeyRelatedField(
+        queryset=models.Risk.objects.all(), many=True, write_only=True, required=False
+    )
+
+    class Meta:
+        model = models.Vulnerability
+        fields = [
+            "id",
+            "reference_id",
+            "title",
+            "description",
+            "status",
+            "severity",
+            "cve_id",
+            "cvss_score",
+            "cvss_vector",
+            "published_date",
+            "controls",
+            "control_ids",
+            "risks",
+            "risk_ids",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["created_at", "updated_at"]
+
+    def create(self, validated_data):
+        control_ids = list(validated_data.pop("control_ids", []))
+        risk_ids = list(validated_data.pop("risk_ids", []))
+        vulnerability = super().create(validated_data)
+        if control_ids:
+            vulnerability.controls.set(control_ids)
+        if risk_ids:
+            vulnerability.risks.set(risk_ids)
+        return vulnerability
+
+    def update(self, instance, validated_data):
+        control_ids = validated_data.pop("control_ids", None)
+        risk_ids = validated_data.pop("risk_ids", None)
+        vulnerability = super().update(instance, validated_data)
+        if control_ids is not None:
+            vulnerability.controls.set(control_ids)
+        if risk_ids is not None:
+            vulnerability.risks.set(risk_ids)
+        return vulnerability
+
+
 class RiskSerializer(serializers.ModelSerializer):
     project_detail = ProjectSerializer(source="project", read_only=True)
     assets = AssetSerializer(many=True, read_only=True)
@@ -178,6 +263,10 @@ class RiskSerializer(serializers.ModelSerializer):
     controls = ControlSerializer(many=True, read_only=True)
     control_ids = serializers.PrimaryKeyRelatedField(
         queryset=models.Control.objects.all(), many=True, write_only=True, required=False
+    )
+    vulnerabilities = VulnerabilitySummarySerializer(many=True, read_only=True)
+    vulnerability_ids = serializers.PrimaryKeyRelatedField(
+        queryset=models.Vulnerability.objects.all(), many=True, write_only=True, required=False
     )
     frameworks = FrameworkSerializer(many=True, read_only=True)
     framework_ids = serializers.PrimaryKeyRelatedField(
@@ -201,6 +290,8 @@ class RiskSerializer(serializers.ModelSerializer):
             "asset_ids",
             "controls",
             "control_ids",
+            "vulnerabilities",
+            "vulnerability_ids",
             "frameworks",
             "framework_ids",
             "likelihood",
@@ -219,6 +310,7 @@ class RiskSerializer(serializers.ModelSerializer):
             "project_detail",
             "assets",
             "controls",
+            "vulnerabilities",
             "frameworks",
             "findings",
             "score",
@@ -232,12 +324,15 @@ class RiskSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         asset_ids = validated_data.pop("asset_ids", [])
         control_ids = validated_data.pop("control_ids", [])
+        vulnerability_ids = validated_data.pop("vulnerability_ids", [])
         framework_ids = validated_data.pop("framework_ids", [])
         risk = super().create(validated_data)
         if asset_ids:
             risk.assets.set(asset_ids)
         if control_ids:
             risk.controls.set(control_ids)
+        if vulnerability_ids:
+            risk.vulnerabilities.set(vulnerability_ids)
         if framework_ids:
             risk.frameworks.set(framework_ids)
         return risk
@@ -245,10 +340,12 @@ class RiskSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         asset_ids = validated_data.pop("asset_ids", None)
         control_ids = validated_data.pop("control_ids", None)
+        vulnerability_ids = validated_data.pop("vulnerability_ids", None)
         framework_ids = validated_data.pop("framework_ids", None)
         risk = super().update(instance, validated_data)
         self._set_many_to_many(risk, "assets", asset_ids)
         self._set_many_to_many(risk, "controls", control_ids)
+        self._set_many_to_many(risk, "vulnerabilities", vulnerability_ids)
         self._set_many_to_many(risk, "frameworks", framework_ids)
         return risk
 

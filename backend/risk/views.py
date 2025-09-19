@@ -45,11 +45,22 @@ class FrameworkControlViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class ControlViewSet(viewsets.ModelViewSet):
-    queryset = models.Control.objects.prefetch_related("frameworks", "framework_controls__framework")
+    queryset = models.Control.objects.prefetch_related(
+        "frameworks",
+        "framework_controls__framework",
+        "vulnerabilities",
+    )
     serializer_class = serializers.ControlSerializer
     permission_classes = [DefaultPermission]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
-    search_fields = ["reference_id", "name", "frameworks__code", "framework_controls__control_id"]
+    search_fields = [
+        "reference_id",
+        "name",
+        "frameworks__code",
+        "framework_controls__control_id",
+        "vulnerabilities__reference_id",
+        "vulnerabilities__title",
+    ]
     ordering_fields = ["reference_id", "name", "created_at"]
     ordering = ["reference_id"]
 
@@ -57,12 +68,18 @@ class ControlViewSet(viewsets.ModelViewSet):
         queryset = super().get_queryset()
         framework_param = self.request.query_params.get("framework")
         framework_control = self.request.query_params.get("framework_control")
+        vulnerability_param = self.request.query_params.get("vulnerability")
         if framework_param:
             queryset = queryset.filter(frameworks__code__iexact=framework_param)
         if framework_control:
             filters_q = Q(framework_controls__control_id__iexact=framework_control)
             if framework_control.isdigit():
                 filters_q |= Q(framework_controls__id=int(framework_control))
+            queryset = queryset.filter(filters_q)
+        if vulnerability_param:
+            filters_q = Q(vulnerabilities__reference_id__iexact=vulnerability_param)
+            if vulnerability_param.isdigit():
+                filters_q |= Q(vulnerabilities__id=int(vulnerability_param))
             queryset = queryset.filter(filters_q)
         return queryset.distinct()
 
@@ -99,6 +116,44 @@ class AssetViewSet(viewsets.ModelViewSet):
         return queryset
 
 
+class VulnerabilityViewSet(viewsets.ModelViewSet):
+    queryset = models.Vulnerability.objects.prefetch_related('controls', 'risks')
+    serializer_class = serializers.VulnerabilitySerializer
+    permission_classes = [DefaultPermission]
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = [
+        "reference_id",
+        "title",
+        "cve_id",
+        "severity",
+        "status",
+        "controls__reference_id",
+        "risks__title",
+    ]
+    ordering_fields = ["updated_at", "created_at", "cvss_score", "reference_id"]
+    ordering = ["-updated_at"]
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        status_param = self.request.query_params.get('status')
+        severity = self.request.query_params.get('severity')
+        risk_param = self.request.query_params.get('risk')
+        control_param = self.request.query_params.get('control')
+        cve = self.request.query_params.get('cve')
+
+        if status_param:
+            queryset = queryset.filter(status=status_param)
+        if severity:
+            queryset = queryset.filter(severity__iexact=severity)
+        if cve:
+            queryset = queryset.filter(Q(reference_id__iexact=cve) | Q(cve_id__iexact=cve))
+        if risk_param:
+            queryset = queryset.filter(risks__id=risk_param)
+        if control_param:
+            queryset = queryset.filter(controls__id=control_param)
+        return queryset.distinct()
+
+
 class RiskViewSet(viewsets.ModelViewSet):
     queryset = (
         models.Risk.objects.select_related("project")
@@ -106,6 +161,8 @@ class RiskViewSet(viewsets.ModelViewSet):
             "assets",
             "controls__frameworks",
             "controls__framework_controls__framework",
+            "controls__vulnerabilities",
+            "vulnerabilities",
             "frameworks",
             "findings",
         )
@@ -114,7 +171,15 @@ class RiskViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.RiskSerializer
     permission_classes = [DefaultPermission]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
-    search_fields = ["title", "owner", "status", "project__name", "frameworks__code"]
+    search_fields = [
+        "title",
+        "owner",
+        "status",
+        "project__name",
+        "frameworks__code",
+        "vulnerabilities__reference_id",
+        "vulnerabilities__title",
+    ]
     ordering_fields = ["updated_at", "created_at", "likelihood", "impact"]
     ordering = ["-updated_at"]
 
@@ -123,6 +188,7 @@ class RiskViewSet(viewsets.ModelViewSet):
         status_param = self.request.query_params.get('status')
         framework = self.request.query_params.get('framework')
         project = self.request.query_params.get('project')
+        vulnerability = self.request.query_params.get('vulnerability')
 
         if status_param:
             queryset = queryset.filter(status=status_param)
@@ -130,6 +196,11 @@ class RiskViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(frameworks__code__iexact=framework)
         if project:
             queryset = queryset.filter(project__id=project)
+        if vulnerability:
+            filters_q = Q(vulnerabilities__reference_id__iexact=vulnerability)
+            if vulnerability.isdigit():
+                filters_q |= Q(vulnerabilities__id=int(vulnerability))
+            queryset = queryset.filter(filters_q)
 
         return queryset.distinct()
 
@@ -170,6 +241,7 @@ class DashboardView(APIView):
         assets = models.Asset.objects.count()
         controls = models.Control.objects.count()
         frameworks = models.Framework.objects.count()
+        vulnerabilities = models.Vulnerability.objects.count()
         return response.Response(
             {
                 "projects": projects,
@@ -178,6 +250,7 @@ class DashboardView(APIView):
                 "assets": assets,
                 "controls": controls,
                 "frameworks": frameworks,
+                "vulnerabilities": vulnerabilities,
             }
         )
 

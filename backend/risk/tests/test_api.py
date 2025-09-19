@@ -108,6 +108,70 @@ class RiskApiTests(APITestCase):
         self.assertGreaterEqual(len(results), 1)
         self.assertEqual(results[0]['framework_code'], 'NIST-CSF')
 
+    def test_create_list_update_delete_vulnerability(self):
+        risk_response = self.client.post('/api/risks/', self._risk_payload(), format='json')
+        self.assertEqual(risk_response.status_code, status.HTTP_201_CREATED)
+        risk_id = risk_response.data['id']
+
+        payload = {
+            'reference_id': 'VULN-2024-001',
+            'title': 'Outdated dependency in web stack',
+            'description': 'Critical library version with known RCE exploit.',
+            'status': 'open',
+            'severity': 'high',
+            'cve_id': 'CVE-2024-12345',
+            'cvss_score': '9.1',
+            'cvss_vector': 'CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H',
+            'published_date': '2024-05-01',
+            'control_ids': [self.control.id],
+            'risk_ids': [risk_id],
+        }
+        create_response = self.client.post('/api/vulnerabilities/', payload, format='json')
+        self.assertEqual(create_response.status_code, status.HTTP_201_CREATED)
+        vulnerability_id = create_response.data['id']
+        self.assertEqual(create_response.data['controls'][0]['id'], self.control.id)
+        self.assertEqual(create_response.data['risks'][0]['id'], risk_id)
+
+        control_response = self.client.get(f'/api/controls/{self.control.id}/')
+        self.assertEqual(control_response.status_code, status.HTTP_200_OK)
+        self.assertTrue(
+            any(item['reference_id'] == 'VULN-2024-001' for item in control_response.data.get('vulnerabilities', []))
+        )
+
+        risk_detail = self.client.get(f'/api/risks/{risk_id}/')
+        self.assertEqual(risk_detail.status_code, status.HTTP_200_OK)
+        self.assertTrue(
+            any(item['reference_id'] == 'VULN-2024-001' for item in risk_detail.data.get('vulnerabilities', []))
+        )
+
+        list_response = self.client.get(f'/api/vulnerabilities/?risk={risk_id}')
+        self.assertEqual(list_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(list_response.data['count'], 1)
+
+        cve_response = self.client.get('/api/vulnerabilities/?cve=CVE-2024-12345')
+        self.assertEqual(cve_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(cve_response.data['count'], 1)
+
+        risk_filter = self.client.get('/api/risks/?vulnerability=VULN-2024-001')
+        self.assertEqual(risk_filter.status_code, status.HTTP_200_OK)
+        self.assertEqual(risk_filter.data['count'], 1)
+
+        control_filter = self.client.get('/api/controls/?vulnerability=VULN-2024-001')
+        self.assertEqual(control_filter.status_code, status.HTTP_200_OK)
+        self.assertEqual(control_filter.data['count'], 1)
+
+        update_response = self.client.patch(
+            f'/api/vulnerabilities/{vulnerability_id}/',
+            {'status': 'mitigating'},
+            format='json',
+        )
+        self.assertEqual(update_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(update_response.data['status'], 'mitigating')
+
+        delete_response = self.client.delete(f'/api/vulnerabilities/{vulnerability_id}/')
+        self.assertEqual(delete_response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(models.Vulnerability.objects.count(), 0)
+
     def test_risk_summary_and_dashboard(self):
         risk = models.Risk.objects.create(
             title='Third-party outage',
@@ -129,6 +193,8 @@ class RiskApiTests(APITestCase):
         self.assertEqual(dashboard_response.data['projects'], 1)
         self.assertEqual(dashboard_response.data['risks'], 1)
         self.assertEqual(dashboard_response.data['frameworks'], 1)
+        self.assertIn('vulnerabilities', dashboard_response.data)
+        self.assertEqual(dashboard_response.data['vulnerabilities'], 0)
 
     def test_framework_list(self):
         response = self.client.get('/api/frameworks/')
@@ -159,3 +225,4 @@ class RiskApiTests(APITestCase):
         results = payload.get('results', payload)
         usernames = [item.get('username') for item in results]
         self.assertIn('tester', usernames)
+
