@@ -36,3 +36,6 @@ yarn-debug.log*
 Thumbs.db
 *.swp
 .DS_Store
+
+#notes
+prd.md
