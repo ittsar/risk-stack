@@ -1,31 +1,33 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+﻿import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { apiRequest } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import VulnerabilityForm from '../components/VulnerabilityForm';
 
-const statusFilters = [
-    { value: '', label: 'All statuses' },
-    { value: 'open', label: 'Open' },
-    { value: 'in_review', label: 'In Review' },
-    { value: 'mitigating', label: 'Mitigating' },
-    { value: 'accepted', label: 'Accepted' },
-    { value: 'closed', label: 'Closed' },
-];
+const severityClassName = (value) => {
+    if (!value) {
+        return 'severity-chip';
+    }
 
-const severityFilters = [
-    { value: '', label: 'All severities' },
-    { value: 'critical', label: 'Critical' },
-    { value: 'high', label: 'High' },
-    { value: 'medium', label: 'Medium' },
-    { value: 'low', label: 'Low' },
-    { value: 'informational', label: 'Informational' },
-];
+    switch (value.toLowerCase()) {
+        case 'critical':
+            return 'severity-chip critical';
+        case 'high':
+            return 'severity-chip high';
+        case 'medium':
+            return 'severity-chip medium';
+        case 'low':
+            return 'severity-chip low';
+        default:
+            return 'severity-chip very-low';
+    }
+};
 
-const formatScore = (value) => {
-    if (value === null || value === undefined || value === '') {
+const formatScore = (score) => {
+    if (score === null || score === undefined || score === '') {
         return '--';
     }
-    return Number(value).toFixed(1);
+    const numeric = Number(score);
+    return Number.isNaN(numeric) ? '--' : numeric.toFixed(1);
 };
 
 const VulnerabilitiesPage = () => {
@@ -43,9 +45,13 @@ const VulnerabilitiesPage = () => {
 
     const fetchVulnerabilities = useCallback(
         async (params = {}) => {
-            if (!token) return;
+            if (!token) {
+                return;
+            }
+
             setLoading(true);
             setError(null);
+
             try {
                 const response = await apiRequest('/api/vulnerabilities/', { token, params });
                 setData(response);
@@ -62,19 +68,46 @@ const VulnerabilitiesPage = () => {
         if (token) {
             fetchVulnerabilities();
         }
-    }, [fetchVulnerabilities, token]);
+    }, [token, fetchVulnerabilities]);
 
     useEffect(() => {
-        const items = (data?.results ?? data) || [];
+        if (!data) {
+            return;
+        }
+        const items = data.results ?? data;
         if (Array.isArray(items) && items.length === 0 && isCreateCollapsed) {
             setIsCreateCollapsed(false);
         }
     }, [data, isCreateCollapsed]);
 
-    const items = useMemo(() => data?.results ?? data ?? [], [data]);
-    const total = data?.count ?? items.length;
+    const statusOptions = useMemo(
+        () => [
+            { value: '', label: 'All statuses' },
+            { value: 'open', label: 'Open' },
+            { value: 'in_review', label: 'In Review' },
+            { value: 'mitigating', label: 'Mitigating' },
+            { value: 'accepted', label: 'Accepted' },
+            { value: 'closed', label: 'Closed' },
+        ],
+        []
+    );
 
-    const handleSearchSubmit = (event) => {
+    const severityOptions = useMemo(
+        () => [
+            { value: '', label: 'All severities' },
+            { value: 'critical', label: 'Critical' },
+            { value: 'high', label: 'High' },
+            { value: 'medium', label: 'Medium' },
+            { value: 'low', label: 'Low' },
+            { value: 'informational', label: 'Informational' },
+        ],
+        []
+    );
+
+    const vulnerabilities = data?.results ?? data ?? [];
+    const total = data?.count ?? vulnerabilities.length;
+
+    const onSearchSubmit = (event) => {
         event.preventDefault();
         const params = {};
         if (search.trim()) {
@@ -92,7 +125,10 @@ const VulnerabilitiesPage = () => {
     const handleDelete = useCallback(
         async (id) => {
             const confirmed = window.confirm('Delete this vulnerability? This action cannot be undone.');
-            if (!confirmed) return;
+            if (!confirmed) {
+                return;
+            }
+
             setDeleteError(null);
             try {
                 await apiRequest(`/api/vulnerabilities/${id}/`, { method: 'DELETE', token });
@@ -103,35 +139,26 @@ const VulnerabilitiesPage = () => {
                     }
                     return current;
                 });
-                const params = {};
-                if (search.trim()) {
-                    params.search = search.trim();
-                }
-                if (statusFilter) {
-                    params.status = statusFilter;
-                }
-                if (severityFilter) {
-                    params.severity = severityFilter;
-                }
-                fetchVulnerabilities(params);
+                fetchVulnerabilities({
+                    search: search.trim() || undefined,
+                    status: statusFilter || undefined,
+                    severity: severityFilter || undefined,
+                });
             } catch (err) {
                 setDeleteError('Failed to delete vulnerability.');
             }
         },
-        [fetchVulnerabilities, search, statusFilter, severityFilter, token]
+        [token, fetchVulnerabilities, search, statusFilter, severityFilter]
     );
 
-    const headingLabel = useMemo(() => {
-        if (search.trim()) {
-            return `Vulnerabilities matching "${search.trim()}"`;
-        }
-        return 'Vulnerabilities';
-    }, [search]);
+    const headerLabel = search.trim()
+        ? `Vulnerabilities matching "${search.trim()}"`
+        : 'Vulnerabilities';
 
     return (
         <div>
             <div className="page-header">
-                <h1>{headingLabel}</h1>
+                <h1>{headerLabel}</h1>
                 <span style={{ color: '#64748b' }}>{total} total</span>
             </div>
 
@@ -139,13 +166,13 @@ const VulnerabilitiesPage = () => {
                 <VulnerabilityForm
                     mode="edit"
                     vulnerability={editingVulnerability}
-                    onSuccess={() => {
-                        const params = {};
-                        if (search.trim()) params.search = search.trim();
-                        if (statusFilter) params.status = statusFilter;
-                        if (severityFilter) params.severity = severityFilter;
-                        fetchVulnerabilities(params);
-                    }}
+                    onSuccess={() =>
+                        fetchVulnerabilities({
+                            search: search.trim() || undefined,
+                            status: statusFilter || undefined,
+                            severity: severityFilter || undefined,
+                        })
+                    }
                     onCancel={() => {
                         setEditingVulnerability(null);
                         setIsEditCollapsed(true);
@@ -156,35 +183,35 @@ const VulnerabilitiesPage = () => {
             )}
 
             <VulnerabilityForm
-                onSuccess={() => {
-                    const params = {};
-                    if (search.trim()) params.search = search.trim();
-                    if (statusFilter) params.status = statusFilter;
-                    if (severityFilter) params.severity = severityFilter;
-                    fetchVulnerabilities(params);
-                }}
+                onSuccess={() =>
+                    fetchVulnerabilities({
+                        search: search.trim() || undefined,
+                        status: statusFilter || undefined,
+                        severity: severityFilter || undefined,
+                    })
+                }
                 isCollapsed={isCreateCollapsed}
                 setIsCollapsed={setIsCreateCollapsed}
             />
 
             <div className="card" style={{ marginTop: '24px' }}>
-                <form className="table-actions" onSubmit={handleSearchSubmit}>
+                <form className="table-actions" onSubmit={onSearchSubmit}>
                     <input
                         type="search"
-                        placeholder="Search vulnerabilities by reference, title, or CVE..."
+                        placeholder="Search vulnerabilities..."
                         value={search}
                         onChange={(event) => setSearch(event.target.value)}
                     />
                     <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
-                        {statusFilters.map((option) => (
-                            <option key={option.value} value={option.value}>
+                        {statusOptions.map((option) => (
+                            <option value={option.value} key={option.value}>
                                 {option.label}
                             </option>
                         ))}
                     </select>
                     <select value={severityFilter} onChange={(event) => setSeverityFilter(event.target.value)}>
-                        {severityFilters.map((option) => (
-                            <option key={option.value} value={option.value}>
+                        {severityOptions.map((option) => (
+                            <option value={option.value} key={option.value}>
                                 {option.label}
                             </option>
                         ))}
@@ -201,10 +228,9 @@ const VulnerabilitiesPage = () => {
                     <table>
                         <thead>
                             <tr>
-                                <th>Reference</th>
-                                <th>Title</th>
-                                <th>Severity</th>
+                                <th>Vulnerability</th>
                                 <th>Status</th>
+                                <th>Severity</th>
                                 <th>CVSS</th>
                                 <th>CVE</th>
                                 <th>Risks</th>
@@ -213,20 +239,30 @@ const VulnerabilitiesPage = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {items.map((item) => {
+                            {vulnerabilities.map((item) => {
                                 const risks = item.risks || [];
                                 const controls = item.controls || [];
                                 return (
                                     <tr key={item.id}>
-                                        <td style={{ fontWeight: 600 }}>{item.reference_id}</td>
                                         <td>
-                                            <div style={{ fontWeight: 600 }}>{item.title}</div>
+                                            <div style={{ fontWeight: 600 }}>{item.reference_id || '--'}</div>
+                                            <div style={{ fontSize: '0.95rem' }}>{item.title}</div>
                                             <div style={{ fontSize: '0.85rem', color: '#64748b' }}>
-                                                {item.description ? item.description.slice(0, 120) + (item.description.length > 120 ? '...' : '') : '--'}
+                                                {item.description
+                                                    ? `${item.description.slice(0, 120)}${
+                                                          item.description.length > 120 ? '...' : ''
+                                                      }`
+                                                    : 'No description provided.'}
                                             </div>
                                         </td>
-                                        <td style={{ textTransform: 'capitalize' }}>{item.severity}</td>
-                                        <td style={{ textTransform: 'capitalize' }}>{item.status.replace('_', ' ')}</td>
+                                        <td style={{ textTransform: 'capitalize' }}>
+                                            {item.status ? item.status.replace('_', ' ') : '--'}
+                                        </td>
+                                        <td>
+                                            <span className={severityClassName(item.severity)}>
+                                                {item.severity || 'N/A'}
+                                            </span>
+                                        </td>
                                         <td>{formatScore(item.cvss_score)}</td>
                                         <td>{item.cve_id || '--'}</td>
                                         <td>
@@ -293,5 +329,3 @@ const VulnerabilitiesPage = () => {
 };
 
 export default VulnerabilitiesPage;
-
-
