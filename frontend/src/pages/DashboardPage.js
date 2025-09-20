@@ -47,11 +47,11 @@ const DashboardPage = () => {
 
     const severityOrder = ['Critical', 'High', 'Medium', 'Low', 'Very Low'];
     const severityColors = {
-        Critical: '#fee2e2',
-        High: '#fef3c7',
-        Medium: '#bfdbfe',
-        Low: '#ccfbf1',
-        'Very Low': '#e2e8f0',
+        Critical: '#f35f71',
+        High: '#f08a4b',
+        Medium: '#d8b04a',
+        Low: '#9aa2ff',
+        'Very Low': '#6f7fa3',
     };
 
     return (
@@ -81,8 +81,8 @@ const DashboardPage = () => {
                                 key={label}
                                 style={{ backgroundColor: background }}
                             >
-                                <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>{label}</div>
-                                <div style={{ fontSize: '1.5rem', color: 'var(--color-heading)' }}>{count}</div>
+                                <div style={{ fontSize: '0.8rem', color: 'rgba(8, 18, 37, 0.75)' }}>{label}</div>
+                                <div style={{ fontSize: '1.5rem', color: '#050b1d' }}>{count}</div>
                             </div>
                         );
                     })}
