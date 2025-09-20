@@ -1,4 +1,4 @@
-﻿import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { apiRequest } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import VulnerabilityForm from '../components/VulnerabilityForm';
@@ -159,7 +159,7 @@ const VulnerabilitiesPage = () => {
         <div>
             <div className="page-header">
                 <h1>{headerLabel}</h1>
-                <span style={{ color: '#64748b' }}>{total} total</span>
+                <span style={{ color: 'var(--color-text-muted)' }}>{total} total</span>
             </div>
 
             {editingVulnerability && (
@@ -221,8 +221,8 @@ const VulnerabilitiesPage = () => {
                     </button>
                 </form>
 
-                {error && <p style={{ color: '#dc2626' }}>{error}</p>}
-                {deleteError && <p style={{ color: '#dc2626' }}>{deleteError}</p>}
+                {error && <p style={{ color: 'var(--color-danger)' }}>{error}</p>}
+                {deleteError && <p style={{ color: 'var(--color-danger)' }}>{deleteError}</p>}
 
                 <div style={{ overflowX: 'auto' }}>
                     <table>
@@ -247,7 +247,7 @@ const VulnerabilitiesPage = () => {
                                         <td>
                                             <div style={{ fontWeight: 600 }}>{item.reference_id || '--'}</div>
                                             <div style={{ fontSize: '0.95rem' }}>{item.title}</div>
-                                            <div style={{ fontSize: '0.85rem', color: '#64748b' }}>
+                                            <div style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
                                                 {item.description
                                                     ? `${item.description.slice(0, 120)}${
                                                           item.description.length > 120 ? '...' : ''
@@ -291,8 +291,8 @@ const VulnerabilitiesPage = () => {
                                                         setIsCreateCollapsed(true);
                                                     }}
                                                     style={{
-                                                        background: '#2563eb',
-                                                        color: '#fff',
+                                                        background: 'var(--color-primary)',
+                                                        color: '#0f172a',
                                                         border: 'none',
                                                         padding: '8px 12px',
                                                         borderRadius: '6px',
@@ -305,8 +305,8 @@ const VulnerabilitiesPage = () => {
                                                     type="button"
                                                     onClick={() => handleDelete(item.id)}
                                                     style={{
-                                                        background: '#dc2626',
-                                                        color: '#fff',
+                                                        background: 'var(--color-danger)',
+                                                        color: '#0f172a',
                                                         border: 'none',
                                                         padding: '8px 12px',
                                                         borderRadius: '6px',

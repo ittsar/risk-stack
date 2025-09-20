@@ -220,7 +220,7 @@ const ControlForm = ({
             style={{ marginBottom: '24px' }}
         >
             <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '16px', marginTop: '16px' }}>
-                {error && <p style={{ color: '#dc2626' }}>{error}</p>}
+                {error && <p style={{ color: 'var(--color-danger)' }}>{error}</p>}
 
                 <div style={{ display: 'grid', gap: '8px' }}>
                     <label htmlFor="reference_id">Reference ID</label>
@@ -302,14 +302,14 @@ const ControlForm = ({
                     </div>
 
                     <div style={{
-                        border: '1px solid #cbd5f5',
+                        border: '1px solid var(--color-border)',
                         borderRadius: '6px',
                         padding: '12px',
                         maxHeight: '260px',
                         overflowY: 'auto',
                     }}>
                         {frameworkControlOptions.length === 0 ? (
-                            <p style={{ color: '#64748b', margin: 0 }}>
+                            <p style={{ color: 'var(--color-text-muted)', margin: 0 }}>
                                 {loadingFrameworkControls ? 'Loading options...' : 'No framework controls match the current filters.'}
                             </p>
                         ) : (
@@ -352,3 +352,4 @@ const ControlForm = ({
 };
 
 export default ControlForm;
+

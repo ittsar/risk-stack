@@ -115,7 +115,7 @@ const RisksPage = () => {
         <div>
             <div className="page-header">
                 <h1>Risks</h1>
-                <span style={{ color: '#64748b' }}>{total} total</span>
+                <span style={{ color: 'var(--color-text-muted)' }}>{total} total</span>
             </div>
 
             {editingRisk && (
@@ -154,12 +154,12 @@ const RisksPage = () => {
                         ))}
                     </select>
                     <button type="submit" disabled={loading}>
-                        {loading ? 'Searching…' : 'Apply'}
+                        {loading ? 'Searching...' : 'Apply'}
                     </button>
                 </form>
 
-                {error && <p style={{ color: '#dc2626' }}>{error}</p>}
-                {deleteError && <p style={{ color: '#dc2626' }}>{deleteError}</p>}
+                {error && <p style={{ color: 'var(--color-danger)' }}>{error}</p>}
+                {deleteError && <p style={{ color: 'var(--color-danger)' }}>{deleteError}</p>}
 
                 <div style={{ overflowX: 'auto' }}>
                     <table>
@@ -180,9 +180,9 @@ const RisksPage = () => {
                                 <tr key={risk.id}>
                                     <td>
                                         <div style={{ fontWeight: 600 }}>{risk.title}</div>
-                                        <div style={{ fontSize: '0.85rem', color: '#64748b' }}>{risk.owner || 'Unassigned'}</div>
+                                        <div style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>{risk.owner || 'Unassigned'}</div>
                                     </td>
-                                    <td>{risk.project_detail?.name || '—'}</td>
+                                    <td>{risk.project_detail?.name || '--'}</td>
                                     <td style={{ textTransform: 'capitalize' }}>{risk.status.replace('_', ' ')}</td>
                                     <td>
                                         <span className={severityClassName(risk.severity_label)}>{risk.severity_label || 'N/A'}</span>
@@ -191,7 +191,7 @@ const RisksPage = () => {
                                     <td>{risk.impact}</td>
                                     <td>
                                         {risk.frameworks.length === 0
-                                            ? '—'
+                                            ? '--'
                                             : risk.frameworks.map((framework) => framework.code).join(', ')}
                                     </td>
                                     <td>
@@ -204,8 +204,8 @@ const RisksPage = () => {
                                                     setIsCreateCollapsed(true);
                                                 }}
                                                 style={{
-                                                    background: '#2563eb',
-                                                    color: '#fff',
+                                                    background: 'var(--color-primary)',
+                                                    color: '#0f172a',
                                                     border: 'none',
                                                     padding: '8px 12px',
                                                     borderRadius: '6px',
@@ -218,8 +218,8 @@ const RisksPage = () => {
                                                 type="button"
                                                 onClick={() => handleDelete(risk.id)}
                                                 style={{
-                                                    background: '#dc2626',
-                                                    color: '#fff',
+                                                    background: 'var(--color-danger)',
+                                                    color: '#0f172a',
                                                     border: 'none',
                                                     padding: '8px 12px',
                                                     borderRadius: '6px',

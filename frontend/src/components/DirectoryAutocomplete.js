@@ -11,7 +11,7 @@ const DirectoryAutocomplete = ({
     label,
     value,
     onChange,
-    placeholder = 'Start typing to search…',
+    placeholder = 'Start typing to search...',
     apiPath = '/api/users/suggestions/',
     minLength = DEFAULT_MIN_LENGTH,
     limit = 8,

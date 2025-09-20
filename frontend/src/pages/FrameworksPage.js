@@ -49,36 +49,43 @@ const FrameworksPage = () => {
                 <h1>Framework Alignment</h1>
             </div>
 
-            {error && <p style={{ color: '#dc2626' }}>Failed to load data: {error}</p>}
+            {error && <p style={{ color: 'var(--color-danger)' }}>Failed to load data: {error}</p>}
 
             <div className="card" style={{ marginBottom: '24px' }}>
                 <h2>Frameworks</h2>
                 <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginTop: '12px' }}>
-                    {frameworks.map((framework) => (
-                        <button
-                            type="button"
-                            key={framework.id}
-                            onClick={() => setActiveFramework(framework.code)}
-                            style={{
-                                padding: '10px 14px',
-                                borderRadius: '9999px',
-                                border: 'none',
-                                cursor: 'pointer',
-                                backgroundColor: activeFramework === framework.code ? '#2563eb' : '#e2e8f0',
-                                color: activeFramework === framework.code ? '#fff' : '#1e293b',
-                                fontWeight: 600,
-                            }}
-                        >
-                            {framework.code}
-                        </button>
-                    ))}
+                    {frameworks.map((framework) => {
+                        const isActive = activeFramework === framework.code;
+                        return (
+                            <button
+                                type="button"
+                                key={framework.id}
+                                onClick={() => setActiveFramework(framework.code)}
+                                style={{
+                                    padding: '10px 14px',
+                                    borderRadius: '9999px',
+                                    border: '1px solid var(--color-border)',
+                                    cursor: 'pointer',
+                                    backgroundColor: isActive
+                                        ? 'var(--color-primary)'
+                                        : 'var(--color-surface-lighter)',
+                                    color: isActive ? '#0f172a' : 'var(--color-text-muted)',
+                                    fontWeight: 600,
+                                    boxShadow: isActive ? '0 12px 24px rgba(122, 139, 255, 0.25)' : 'none',
+                                    transition: 'all 0.2s ease',
+                                }}
+                            >
+                                {framework.code}
+                            </button>
+                        );
+                    })}
                 </div>
             </div>
 
             {activeFramework && activeFrameworkDetails && activeFrameworkDetails.controls?.length > 0 && (
                 <div className="card" style={{ marginBottom: '24px' }}>
                     <h2>
-                        Controls mapped to <span style={{ color: '#2563eb' }}>{activeFramework}</span>
+                        Controls mapped to <span style={{ color: 'var(--color-primary)' }}>{activeFramework}</span>
                     </h2>
                     <div style={{ overflowX: 'auto' }}>
                         <table>
@@ -103,7 +110,7 @@ const FrameworksPage = () => {
 
             <div className="card">
                 <h2>
-                    Risks mapped to <span style={{ color: '#2563eb' }}>{activeFramework || 'framework'}</span>
+                    Risks mapped to <span style={{ color: 'var(--color-primary)' }}>{activeFramework || 'framework'}</span>
                 </h2>
                 {activeFramework ? (
                     <table>
@@ -125,7 +132,7 @@ const FrameworksPage = () => {
                                     <tr key={risk.id}>
                                         <td>{risk.title}</td>
                                         <td>{risk.severity_label}</td>
-                                        <td>{risk.project_detail?.name || '—'}</td>
+                                        <td>{risk.project_detail?.name || '--'}</td>
                                         <td style={{ textTransform: 'capitalize' }}>{risk.status.replace('_', ' ')}</td>
                                     </tr>
                                 ))
@@ -133,7 +140,7 @@ const FrameworksPage = () => {
                         </tbody>
                     </table>
                 ) : (
-                    <p>Select a framework to view mapped risks.</p>
+                    <p style={{ color: 'var(--color-text-muted)' }}>Select a framework to view mapped risks.</p>
                 )}
             </div>
         </div>

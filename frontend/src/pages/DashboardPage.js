@@ -74,15 +74,15 @@ const DashboardPage = () => {
                 <div className="heatmap-grid">
                     {severityOrder.map((label) => {
                         const count = summary.by_severity[label] || 0;
-                        const background = severityColors[label] || '#e2e8f0';
+                        const background = severityColors[label] || 'var(--color-surface-lighter)';
                         return (
                             <div
                                 className="heatmap-cell"
                                 key={label}
                                 style={{ backgroundColor: background }}
                             >
-                                <div style={{ fontSize: '0.8rem', color: '#64748b' }}>{label}</div>
-                                <div style={{ fontSize: '1.5rem', color: '#0f172a' }}>{count}</div>
+                                <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>{label}</div>
+                                <div style={{ fontSize: '1.5rem', color: 'var(--color-heading)' }}>{count}</div>
                             </div>
                         );
                     })}
@@ -113,4 +113,3 @@ const DashboardPage = () => {
 };
 
 export default DashboardPage;
-

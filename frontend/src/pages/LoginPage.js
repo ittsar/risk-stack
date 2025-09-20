@@ -52,9 +52,9 @@ const LoginPage = () => {
                     required
                 />
                 <button type="submit" disabled={loading}>
-                    {loading ? 'Signing in…' : 'Sign in'}
+                    {loading ? 'Signing in...' : 'Sign in'}
                 </button>
-                {error && <p style={{ color: '#dc2626', margin: 0 }}>{error}</p>}
+                {error && <p style={{ color: 'var(--color-danger)', margin: 0 }}>{error}</p>}
             </form>
         </div>
     );

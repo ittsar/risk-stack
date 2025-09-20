@@ -78,7 +78,7 @@ const ControlsPage = () => {
         <div>
             <div className="page-header">
                 <h1>{headingLabel}</h1>
-                <span style={{ color: '#64748b' }}>{total} total</span>
+                <span style={{ color: 'var(--color-text-muted)' }}>{total} total</span>
             </div>
 
             {editingControl && (
@@ -116,12 +116,12 @@ const ControlsPage = () => {
                         onChange={(event) => setSearch(event.target.value)}
                     />
                     <button type="submit" disabled={loading}>
-                        {loading ? 'Searching…' : 'Search'}
+                        {loading ? 'Searching...' : 'Search'}
                     </button>
                 </form>
 
-                {error && <p style={{ color: '#dc2626' }}>{error}</p>}
-                {deleteError && <p style={{ color: '#dc2626' }}>{deleteError}</p>}
+                {error && <p style={{ color: 'var(--color-danger)' }}>{error}</p>}
+                {deleteError && <p style={{ color: 'var(--color-danger)' }}>{deleteError}</p>}
 
                 <div style={{ overflowX: 'auto' }}>
                     <table>
@@ -198,8 +198,8 @@ const ControlsPage = () => {
                                                         setIsCreateCollapsed(true);
                                                     }}
                                                     style={{
-                                                        background: '#2563eb',
-                                                        color: '#fff',
+                                                        background: 'var(--color-primary)',
+                                                        color: '#0f172a',
                                                         border: 'none',
                                                         padding: '8px 12px',
                                                         borderRadius: '6px',
@@ -212,8 +212,8 @@ const ControlsPage = () => {
                                                     type="button"
                                                     onClick={() => handleDelete(controlItem.id)}
                                                     style={{
-                                                        background: '#dc2626',
-                                                        color: '#fff',
+                                                        background: 'var(--color-danger)',
+                                                        color: '#0f172a',
                                                         border: 'none',
                                                         padding: '8px 12px',
                                                         borderRadius: '6px',
@@ -236,4 +236,3 @@ const ControlsPage = () => {
 };
 
 export default ControlsPage;
-

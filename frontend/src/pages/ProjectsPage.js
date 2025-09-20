@@ -88,7 +88,7 @@ const ProjectsPage = () => {
         <div>
             <div className="page-header">
                 <h1>Projects</h1>
-                <span style={{ color: '#64748b' }}>{total} total</span>
+                <span style={{ color: 'var(--color-text-muted)' }}>{total} total</span>
             </div>
 
             {editingProject && (
@@ -127,12 +127,12 @@ const ProjectsPage = () => {
                         ))}
                     </select>
                     <button type="submit" disabled={loading}>
-                        {loading ? 'Searching…' : 'Apply'}
+                        {loading ? 'Searching...' : 'Apply'}
                     </button>
                 </form>
 
-                {error && <p style={{ color: '#dc2626' }}>{error}</p>}
-                {deleteError && <p style={{ color: '#dc2626' }}>{deleteError}</p>}
+                {error && <p style={{ color: 'var(--color-danger)' }}>{error}</p>}
+                {deleteError && <p style={{ color: 'var(--color-danger)' }}>{deleteError}</p>}
 
                 <div style={{ overflowX: 'auto' }}>
                     <table>
@@ -150,14 +150,14 @@ const ProjectsPage = () => {
                                 <tr key={project.id}>
                                     <td>
                                         <div style={{ fontWeight: 600 }}>{project.name}</div>
-                                        <div style={{ fontSize: '0.85rem', color: '#64748b' }}>
+                                        <div style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
                                             {project.description || 'No description'}
                                         </div>
                                     </td>
-                                    <td>{project.owner || '—'}</td>
+                                    <td>{project.owner || '--'}</td>
                                     <td style={{ textTransform: 'capitalize' }}>{project.status.replace('_', ' ')}</td>
                                     <td>
-                                        {project.start_date || '—'} → {project.target_end_date || '—'}
+                                        {project.start_date || '--'} -> {project.target_end_date || '--'}
                                     </td>
                                     <td>
                                         <div style={{ display: 'flex', gap: '8px' }}>
@@ -169,8 +169,8 @@ const ProjectsPage = () => {
                                                     setIsCreateCollapsed(true);
                                                 }}
                                                 style={{
-                                                    background: '#2563eb',
-                                                    color: '#fff',
+                                                    background: 'var(--color-primary)',
+                                                    color: '#0f172a',
                                                     border: 'none',
                                                     padding: '8px 12px',
                                                     borderRadius: '6px',
@@ -183,8 +183,8 @@ const ProjectsPage = () => {
                                                 type="button"
                                                 onClick={() => handleDelete(project.id)}
                                                 style={{
-                                                    background: '#dc2626',
-                                                    color: '#fff',
+                                                    background: 'var(--color-danger)',
+                                                    color: '#0f172a',
                                                     border: 'none',
                                                     padding: '8px 12px',
                                                     borderRadius: '6px',

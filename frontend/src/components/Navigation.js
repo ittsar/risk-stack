@@ -91,11 +91,12 @@ const Navigation = () => {
                     type="button"
                     onClick={() => setToken(null)}
                     style={{
-                        background: '#1e293b',
-                        color: '#e2e8f0',
-                        border: 'none',
-                        borderRadius: '8px',
+                        background: 'var(--color-surface-lighter)',
+                        color: 'var(--color-heading)',
+                        border: '1px solid var(--color-border)',
+                        borderRadius: '10px',
                         padding: '10px 12px',
+                        boxShadow: '0 12px 24px rgba(2, 8, 23, 0.35)',
                         cursor: 'pointer',
                     }}
                 >

@@ -100,8 +100,8 @@ const AssetsPage = () => {
         <div>
             <div className="page-header">
                 <h1>Assets</h1>
-                <span style={{ color: '#64748b' }}>
-                    {total} total · {typeLabel}
+                <span style={{ color: 'var(--color-text-muted)' }}>
+                    {total} total | {typeLabel}
                 </span>
             </div>
 
@@ -141,12 +141,12 @@ const AssetsPage = () => {
                         ))}
                     </select>
                     <button type="submit" disabled={loading}>
-                        {loading ? 'Searching…' : 'Apply'}
+                        {loading ? 'Searching...' : 'Apply'}
                     </button>
                 </form>
 
-                {error && <p style={{ color: '#dc2626' }}>{error}</p>}
-                {deleteError && <p style={{ color: '#dc2626' }}>{deleteError}</p>}
+                {error && <p style={{ color: 'var(--color-danger)' }}>{error}</p>}
+                {deleteError && <p style={{ color: 'var(--color-danger)' }}>{deleteError}</p>}
 
                 <div style={{ overflowX: 'auto' }}>
                     <table>
@@ -165,14 +165,14 @@ const AssetsPage = () => {
                                 <tr key={assetItem.id}>
                                     <td>
                                         <div style={{ fontWeight: 600 }}>{assetItem.name}</div>
-                                        <div style={{ fontSize: '0.85rem', color: '#64748b' }}>
+                                        <div style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
                                             {assetItem.description || 'No description'}
                                         </div>
                                     </td>
                                     <td style={{ textTransform: 'capitalize' }}>{assetItem.asset_type}</td>
-                                    <td>{assetItem.business_owner || '—'}</td>
-                                    <td>{assetItem.project_detail?.name || '—'}</td>
-                                    <td>{assetItem.criticality || '—'}</td>
+                                    <td>{assetItem.business_owner || '--'}</td>
+                                    <td>{assetItem.project_detail?.name || '--'}</td>
+                                    <td>{assetItem.criticality || '--'}</td>
                                     <td>
                                         <div style={{ display: 'flex', gap: '8px' }}>
                                             <button
@@ -183,8 +183,8 @@ const AssetsPage = () => {
                                                     setIsCreateCollapsed(true);
                                                 }}
                                                 style={{
-                                                    background: '#2563eb',
-                                                    color: '#fff',
+                                                    background: 'var(--color-primary)',
+                                                    color: '#0f172a',
                                                     border: 'none',
                                                     padding: '8px 12px',
                                                     borderRadius: '6px',
@@ -197,8 +197,8 @@ const AssetsPage = () => {
                                                 type="button"
                                                 onClick={() => handleDelete(assetItem.id)}
                                                 style={{
-                                                    background: '#dc2626',
-                                                    color: '#fff',
+                                                    background: 'var(--color-danger)',
+                                                    color: '#0f172a',
                                                     border: 'none',
                                                     padding: '8px 12px',
                                                     borderRadius: '6px',

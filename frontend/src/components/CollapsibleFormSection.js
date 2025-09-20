@@ -11,7 +11,7 @@ const buttonStyle = {
     border: 'none',
     background: 'transparent',
     cursor: 'pointer',
-    color: '#2563eb',
+    color: 'var(--color-primary)',
 };
 
 const CollapsibleFormSection = ({

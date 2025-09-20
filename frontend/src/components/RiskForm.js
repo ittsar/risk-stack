@@ -284,7 +284,7 @@ const RiskForm = ({
                     />
                 </div>
 
-                {error && <p style={{ color: '#dc2626', margin: 0 }}>{error}</p>}
+                {error && <p style={{ color: 'var(--color-danger)', margin: 0 }}>{error}</p>}
 
                 <div style={{ display: 'flex', gap: '12px' }}>
                     <button type="submit" disabled={isSubmitting}>
@@ -297,8 +297,9 @@ const RiskForm = ({
                             style={{
                                 padding: '10px 16px',
                                 borderRadius: '8px',
-                                border: '1px solid #cbd5f5',
-                                background: '#fff',
+                                border: '1px solid var(--color-border)',
+                                background: 'transparent',
+                                color: 'var(--color-text)',
                                 cursor: 'pointer',
                             }}
                         >
@@ -336,7 +337,7 @@ const MultiCheckbox = ({ options, selected, onChange, labelKey = 'name' }) => {
                     </span>
                 </label>
             ))}
-            {options.length === 0 && <span style={{ color: '#64748b' }}>No options yet.</span>}
+            {options.length === 0 && <span style={{ color: 'var(--color-text-muted)' }}>No options yet.</span>}
         </div>
     );
 };
